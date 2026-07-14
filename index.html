@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rodo - رحلة الأسطورة</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Tone.js for Sound Effects & Ambient Audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Alexandria Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #050505;
+            --bg-surface: #111112;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #0A84FF;
+        }
+
+        body {
+            font-family: 'Alexandria', sans-serif;
+            background-color: var(--bg-base);
+            color: #F5F5F7;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+        
+        ::selection { background-color: rgba(10, 132, 255, 0.3); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .view-section { display: none; }
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .timer-ring {
+            transition: stroke-dashoffset 1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .glass-panel {
+            background: rgba(20, 20, 22, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-press:active { transform: scale(0.95); transition: transform 0.1s; }
+        
+        .ambient-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        @keyframes toastEnter {
+            from { opacity: 0; transform: translateY(-20px) translateX(-50%); }
+            to { opacity: 1; transform: translateY(0) translateX(-50%); }
+        }
+        @keyframes toastLeave {
+            from { opacity: 1; transform: translateY(0) translateX(-50%); }
+            to { opacity: 0; transform: translateY(-20px) translateX(-50%); }
+        }
+        .toast-enter { animation: toastEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-leave { animation: toastLeave 0.4s ease-in forwards; }
+
+        /* Boss Shake Animation */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .animate-shake { animation: shake 0.5s; }
+        
+        /* Stats Progress bars */
+        .stat-bar-fill { transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Avatar Lock Overlay */
+        .locked-avatar {
+            filter: grayscale(100%) brightness(0.6);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="pb-24 selection:bg-blue-500/30">
+
+    <div class="ambient-glow bg-blue-600/30 w-[80vw] h-[60vw] top-[-10%] left-[-10%] md:w-[40vw] md:h-[40vw]"></div>
+    <div class="ambient-glow bg-purple-600/20 w-[70vw] h-[70vw] bottom-[10%] right-[-20%] md:w-[30vw] md:h-[30vw]"></div>
+
+    <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-[90%] max-w-sm pointer-events-none"></div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 pt-safe">
+        <div class="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Rodo Brand -->
+                <span class="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 pl-2 border-l border-white/10 hidden sm:block">Rodo</span>
+                <!-- User Avatar in Header -->
+                <div id="ui-header-avatar" class="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.15)] flex items-center justify-center bg-white/5 border border-white/10">
+                    <!-- Avatar injected here -->
+                </div>
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-lg font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 sm:hidden block">Rodo</span>
+                        <h1 id="ui-header-name" class="text-lg font-black tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-l from-white to-white/70 truncate max-w-[100px] sm:max-w-[200px]">الأسطورة</h1>
+                    </div>
+                    <p class="text-[11px] text-white/50 font-medium">الأسبوع <span id="ui-header-week" class="text-white/80">1</span></p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 shadow-sm" title="العملات الذهبية">
+                    <i data-lucide="coins" class="w-3.5 h-3.5"></i>
+                    <span id="ui-header-coins" class="text-xs font-bold mt-0.5">0</span>
+                </div>
+                <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 shadow-sm" title="أيام متتالية">
+                    <i data-lucide="flame" class="w-3.5 h-3.5" id="streak-icon"></i>
+                    <span id="ui-header-streak" class="text-xs font-bold mt-0.5">0</span>
+                </div>
+                <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shadow-sm">
+                    <span id="ui-header-level" class="text-xs font-bold mt-0.5">Lvl 1</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-6 relative z-10">
+        
+        <!-- ================= VIEW: DASHBOARD (المهام) ================= -->
+        <section id="view-dashboard" class="view-section active space-y-6">
+            <div class="glass-panel rounded-[2rem] p-6 relative overflow-hidden shadow-2xl">
+                <div class="absolute right-0 top-0 w-40 h-40 bg-blue-500/20 rounded-full blur-[60px] pointer-events-none"></div>
+                <h2 class="text-xl font-black mb-2 text-white">مرحباً يا بطل!</h2>
+                
+                <!-- Main Goal Reminder Banner -->
+                <div id="ui-main-goal-banner" class="hidden items-center gap-3 mt-4 mb-4 bg-gradient-to-r from-purple-500/15 to-indigo-500/10 p-4 rounded-2xl border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                    <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 border border-purple-500/30">
+                        <i data-lucide="target" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-[10px] text-purple-300/80 font-bold mb-0.5">تذكر دائماً لماذا بدأت اليوم:</p>
+                        <p id="ui-main-goal-text" class="text-white font-bold text-sm leading-tight"></p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3 mt-3 mb-5 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <i data-lucide="quote" class="w-5 h-5 text-blue-400 shrink-0 mt-0.5 opacity-70"></i>
+                    <p id="ui-daily-quote" class="text-white/70 text-sm leading-relaxed font-medium italic"></p>
+                </div>
+                <div class="w-full bg-[#0A0A0C] h-3.5 rounded-full border border-white/10 overflow-hidden relative shadow-inner">
+                    <div id="ui-xp-bar" class="h-full bg-gradient-to-l from-blue-500 to-cyan-400 rounded-full transition-all duration-1000 ease-out w-0 relative">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-2 text-[11px] font-bold text-white/50">
+                    <span>الخبرة للتالي</span>
+                    <span id="ui-xp-text" class="text-white/80">0 / 100</span>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-3 shadow-lg">
+                <form onsubmit="addTask(event)" class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2 px-2 pt-1">
+                        <input type="text" id="new-task-input" placeholder="ما هي مهمتك القادمة؟" class="flex-1 bg-transparent border-none text-white px-2 py-2 focus:outline-none placeholder-white/30 text-sm font-medium">
+                        <button type="submit" class="w-11 h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                            <i data-lucide="plus" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 px-2 pb-2 overflow-x-auto hide-scrollbar flex-nowrap w-full">
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="study" checked class="hidden peer">
+                            <div class="px-4 py-2 rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-purple-500/15 peer-checked:text-purple-300 peer-checked:border-purple-500/40 transition-all flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-purple-400"></div> مذاكرة
+                            </div>
+                        </label>
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="solve" class="hidden peer">
+                            <div class="px-4 py-2 rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-blue-500/15 peer-checked:text-blue-300 peer-checked:border-blue-500/40 transition-all flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-blue-400"></div> حل وتدريب
+                            </div>
+                        </label>
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="review" class="hidden peer">
+                            <div class="px-4 py-2 rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-orange-500/15 peer-checked:text-orange-300 peer-checked:border-orange-500/40 transition-all flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-orange-400"></div> مراجعة
+                            </div>
+                        </label>
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="life" class="hidden peer">
+                            <div class="px-4 py-2 rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-300 peer-checked:border-emerald-500/40 transition-all flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-emerald-400"></div> شخصي
+                            </div>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div id="ui-tasks-container" class="space-y-3 pb-8"></div>
+        </section>
+
+        <!-- ================= VIEW: GOALS (الأهداف والمهمات الكبيرة) ================= -->
+        <section id="view-goals" class="view-section space-y-6 pb-8">
+            <!-- Main Goal (The Dream) -->
+            <div class="glass-panel rounded-[2rem] p-6 shadow-xl relative overflow-hidden border-purple-500/20">
+                <div class="absolute -left-10 -top-10 w-32 h-32 bg-purple-600/20 rounded-full blur-[50px] pointer-events-none"></div>
+                <h2 class="text-xl font-black mb-2 text-white flex items-center gap-2">
+                    <i data-lucide="crown" class="w-6 h-6 text-yellow-400"></i> الهدف الأعظم
+                </h2>
+                <p class="text-sm text-white/60 mb-5 leading-relaxed">اكتب حلمك النهائي هنا (مثال: كلية الطب، الهندسة، التفوق...). سنقوم بتذكيرك به يومياً لتبقى شعلتك متقدة ولا تنطفئ.</p>
+                <div class="relative">
+                    <input type="text" id="ui-main-goal-input" onchange="updateMainGoal(this.value)" placeholder="اكتب حلمك الذي تسعى إليه..." class="w-full bg-black/40 border border-purple-500/30 rounded-xl px-4 py-3.5 text-white font-bold focus:outline-none focus:border-purple-400 transition-colors shadow-inner placeholder-white/20">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-purple-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50"></i>
+                </div>
+            </div>
+
+            <!-- Big Quests -->
+            <div class="text-center mb-4 mt-8">
+                <h2 class="text-xl font-bold text-white mb-1">المهام الكبرى (Epic Quests)</h2>
+                <p class="text-white/50 text-xs">امتحانات شاملة، مراجعة مادة كاملة. مكافآتها ضخمة وتوجه ضربات مدمرة للزعماء!</p>
+            </div>
+
+            <form onsubmit="addBigQuest(event)" class="glass-panel rounded-2xl p-3 flex gap-2 shadow-lg">
+                <input type="text" id="new-goal-input" placeholder="أضف مهمة كبرى (مثال: امتحان فيزياء شامل)" class="flex-1 bg-transparent border-none text-white px-2 text-sm focus:outline-none placeholder-white/30 font-medium">
+                <button type="submit" class="w-11 h-11 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(147,51,234,0.4)]">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                </button>
+            </form>
+
+            <div id="ui-goals-container" class="space-y-3 pb-4"></div>
+        </section>
+
+        <!-- ================= VIEW: FOCUS TIMER (التركيز) ================= -->
+        <section id="view-focus" class="view-section">
+            <div class="min-h-[60vh] flex flex-col justify-center items-center py-6">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2 text-white">التركيز العميق</h2>
+                    <p class="text-white/50 text-sm">25 دقيقة من العمل المستمر تعادل ساعات من التشتت.</p>
+                </div>
+                
+                <div class="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72 mb-10">
+                    <svg class="w-full h-full drop-shadow-2xl" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3"></circle>
+                        <circle id="timer-progress" class="timer-ring text-blue-500" cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4.5" stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round"></circle>
+                    </svg>
+                    <div class="absolute flex flex-col items-center justify-center text-center">
+                        <span id="timer-display" class="text-5xl font-black tabular-nums tracking-tight text-white mb-2">25:00</span>
+                        <span id="timer-mode" class="text-blue-400 font-bold text-xs bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 shadow-inner">وقت المذاكرة</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center gap-6">
+                    <div class="flex items-center gap-5">
+                        <button onclick="toggleTimer()" id="btn-timer-toggle" class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center btn-press shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all">
+                            <i data-lucide="play" id="icon-timer-toggle" class="w-7 h-7 ml-1"></i>
+                        </button>
+                        <button onclick="resetTimer()" class="w-14 h-14 rounded-full glass-panel border-white/10 text-white/50 flex items-center justify-center btn-press hover:text-white hover:bg-white/5 transition-all">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Ambient Sound Toggle (Brown Noise) -->
+                    <button onclick="toggleAmbientSound()" id="btn-ambient-toggle" class="px-5 py-2.5 rounded-2xl border border-white/10 text-white/50 flex items-center gap-2.5 btn-press transition-all hover:bg-white/5">
+                        <i data-lucide="wind" class="w-4 h-4"></i>
+                        <span class="text-sm font-medium">صوت هواء هادئ (للتركيز)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: BOSS FIGHTS (الزعماء) ================= -->
+        <section id="view-bosses" class="view-section space-y-6 pb-8">
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-bold text-white mb-1">ساحة الزعماء</h2>
+                <p class="text-white/50 text-sm">إنجاز المهام الكبرى والصغرى يوجه ضربات لهؤلاء الأعداء!</p>
+            </div>
+            <div id="ui-boss-container">
+                <!-- Boss injected here -->
+            </div>
+        </section>
+
+        <!-- ================= VIEW: STORE (المتجر) ================= -->
+        <section id="view-store" class="view-section space-y-6 pb-8">
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl mb-6 bg-yellow-500/5 border-yellow-500/20">
+                <i data-lucide="gem" class="w-10 h-10 text-yellow-400 mx-auto mb-3"></i>
+                <h2 class="text-2xl font-bold mb-1 text-white">خزنة الغنائم</h2>
+                <p class="text-sm text-white/60 mb-4">استخدم عملاتك الذهبية لشراء مكافآتك الترفيهية بدون تأنيب ضمير!</p>
+                <div class="inline-flex items-center gap-2 bg-black/40 px-5 py-2.5 rounded-xl border border-white/10">
+                    <span class="text-white/60 text-sm">رصيدك:</span>
+                    <span id="ui-store-coins" class="text-yellow-400 font-bold text-lg">0</span>
+                    <i data-lucide="coins" class="w-4 h-4 text-yellow-500"></i>
+                </div>
+            </div>
+
+            <!-- Custom Reward Form -->
+            <form onsubmit="addReward(event)" class="glass-panel rounded-2xl p-3 flex gap-2">
+                <input type="text" id="new-reward-input" placeholder="إضافة مكافأة جديدة (مثل: فيلم المفضل)" class="flex-1 bg-transparent border-none text-white px-2 text-sm focus:outline-none placeholder-white/30">
+                <input type="number" id="new-reward-cost" placeholder="السعر" class="w-20 bg-black/40 rounded-lg border border-white/10 text-white text-center text-sm focus:outline-none placeholder-white/30">
+                <button type="submit" class="w-10 h-10 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
+            </form>
+
+            <div id="ui-rewards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Rewards injected here -->
+            </div>
+
+            <!-- Inventory Section (المخزون) -->
+            <div class="mt-10">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="backpack" class="w-5 h-5 text-emerald-400"></i> مخزون المكافآت (مشترياتي)
+                </h3>
+                <div id="ui-inventory-container" class="flex flex-col gap-3">
+                    <!-- Inventory items injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: STATS & JOURNEY (الإحصائيات والرحلة) ================= -->
+        <section id="view-stats" class="view-section space-y-8 pb-10">
+            <!-- Stats -->
+            <div class="glass-panel rounded-[2rem] p-6">
+                <h3 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-5 h-5 text-blue-400"></i> توازن المهارات
+                </h3>
+                <div id="ui-stats-bars" class="space-y-4">
+                    <!-- Progress bars injected via JS -->
+                </div>
+            </div>
+
+            <!-- Journey Map -->
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl mt-8">
+                <h3 class="text-xl font-bold mb-2 text-white">خريطة الماراثون</h3>
+                <p class="text-xs text-white/60 mb-5 leading-relaxed">تقدمك الأسبوعي نحو القمة.</p>
+                <button onclick="advanceWeek()" id="btn-advance-week" class="w-full py-3.5 bg-white hover:bg-gray-200 text-black rounded-xl font-bold text-sm btn-press transition-colors flex items-center justify-center gap-2">
+                    <span>إنهاء الأسبوع واستلام 200 XP وعملة</span>
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="ui-timeline" class="space-y-2 mt-6 px-2 pb-6">
+                <!-- Journey injected via JS -->
+            </div>
+        </section>
+
+        <!-- ================= VIEW: PROFILE (البروفايل) ================= -->
+        <section id="view-profile" class="view-section space-y-6 pb-10">
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl">
+                <h2 class="text-xl font-black mb-1 text-white">بطاقة الطالب</h2>
+                <p class="text-sm text-white/50 mb-6">خصص هويتك واختر الأفاتار الذي يمثلك في الرحلة.</p>
+                
+                <div class="mb-6 relative max-w-xs mx-auto">
+                    <label class="absolute -top-2.5 right-4 bg-[#111112] px-2 text-[10px] font-bold text-blue-400 rounded-md">اسم البطل</label>
+                    <input type="text" id="ui-profile-name" onchange="updateUserName(this.value)" placeholder="اكتب اسمك هنا..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white font-bold text-center focus:outline-none focus:border-blue-500 transition-colors shadow-inner">
+                </div>
+
+                <div class="text-right mb-3 mt-8">
+                    <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4 text-blue-400"></i> تشكيلة الأبطال
+                    </h3>
+                    <p class="text-[10px] text-white/40">اضغط على الأفاتار لاختياره. النظارات تخفي التركيز العميق!</p>
+                </div>
+                
+                <div id="ui-avatar-grid" class="grid grid-cols-4 gap-3">
+                    <!-- Avatars injected here -->
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="glass-panel rounded-2xl p-5 border border-red-500/20 bg-red-500/5 mt-8">
+                <h3 class="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> منطقة الخطر
+                </h3>
+                <p class="text-xs text-white/50 mb-4">مسح جميع بياناتك، مهامك، ومستواك والبدء من الصفر.</p>
+                <button onclick="requestReset()" id="btn-reset-data" class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold btn-press transition-all">
+                    إعادة تهيئة البيانات (Reset)
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 7-Item Floating Bottom Navigation -->
+    <nav class="fixed bottom-4 left-0 right-0 mx-auto w-[98%] max-w-2xl glass-panel rounded-2xl p-1.5 flex justify-between items-center z-50 shadow-[0_10px_40px_rgba(0,0,0,0.7)] border-white/10 overflow-x-auto hide-scrollbar gap-1">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-blue-400 bg-blue-500/10 shadow-inner">
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">المهام</span>
+        </button>
+        <button onclick="switchTab('goals')" id="nav-goals" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="target" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">الأهداف</span>
+        </button>
+        <button onclick="switchTab('focus')" id="nav-focus" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="timer" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">التركيز</span>
+        </button>
+        <button onclick="switchTab('bosses')" id="nav-bosses" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white relative">
+            <i data-lucide="swords" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">الزعماء</span>
+        </button>
+        <button onclick="switchTab('store')" id="nav-store" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">المتجر</span>
+        </button>
+        <button onclick="switchTab('stats')" id="nav-stats" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">إحصائيات</span>
+        </button>
+        <button onclick="switchTab('profile')" id="nav-profile" class="flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">البروفايل</span>
+        </button>
+    </nav>
+
+    <script>
+        // --- Data & Categories ---
+        const CATEGORIES = {
+            study: { label: 'مذاكرة', color: 'bg-purple-400', colorCode: '#c084fc', bgCheck: 'bg-purple-500', textCheck: 'text-purple-400' },
+            solve: { label: 'حل وتدريب', color: 'bg-blue-400', colorCode: '#60a5fa', bgCheck: 'bg-blue-500', textCheck: 'text-blue-400' },
+            review: { label: 'مراجعة', color: 'bg-orange-400', colorCode: '#fb923c', bgCheck: 'bg-orange-500', textCheck: 'text-orange-400' },
+            life: { label: 'شخصي', color: 'bg-emerald-400', colorCode: '#34d399', bgCheck: 'bg-emerald-500', textCheck: 'text-emerald-400' }
+        };
+
+        const DEFAULT_REWARDS = [
+            { id: 1, title: 'مشاهدة حلقة من الأنمي/المسلسل', cost: 200 },
+            { id: 2, title: 'تصفح السوشيال ميديا 30 دقيقة', cost: 150 },
+            { id: 3, title: 'جلسة جيمنج (ساعة كاملة)', cost: 400 },
+            { id: 4, title: 'أكلة حلوة خارج الدايت', cost: 300 }
+        ];
+
+        // Epic Bosses Progression
+        const DEFAULT_BOSSES = [
+            { id: 1, title: 'وحش التراكمات (الفصل الأول)', maxHp: 1000, hp: 1000, isDead: false },
+            { id: 2, title: 'شيطان التسويف (سارق الوقت)', maxHp: 2500, hp: 2500, isDead: false },
+            { id: 3, title: 'غول التشتت (لعنة السوشيال ميديا)', maxHp: 5000, hp: 5000, isDead: false },
+            { id: 4, title: 'تنين الامتحانات الشاملة', maxHp: 9000, hp: 9000, isDead: false },
+            { id: 5, title: 'سيد اليأس (اختبار الإرادة)', maxHp: 15000, hp: 15000, isDead: false },
+            { id: 6, title: 'الإمبراطور الأخير (امتحانات نهاية العام)', maxHp: 30000, hp: 30000, isDead: false }
+        ];
+
+        const STAGES = [
+            { id: 1, name: "التأسيس والانطلاق", weeks: [1, 13], color: "from-blue-500 to-cyan-500", icon: "flag" },
+            { id: 2, name: "التعمق والربط", weeks: [14, 26], color: "from-purple-500 to-indigo-500", icon: "book-open" },
+            { id: 3, name: "تحدي المنتصف", weeks: [27, 39], color: "from-orange-500 to-red-500", icon: "flame" },
+            { id: 4, name: "ليالي الحسم", weeks: [40, 52], color: "from-yellow-400 to-yellow-600", icon: "trophy" }
+        ];
+
+        const QUOTES = [
+            "الألم المؤقت للمذاكرة أفضل من ألم الندم الدائم.",
+            "لا تتوقف عندما تتعب، بل توقف عندما تنتهي.",
+            "كل صفحة تقرأها تبني طوبة في قصر مستقبلك.",
+            "النجاح ليس صدفة، بل هو استمرارية وعمل شاق."
+        ];
+
+        // --- SVGs for Avatars ---
+        const AVATARS_DATA = [
+            { id: 1, reqLvl: 1, type: 'standard', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#3b82f6"/><circle cx="50" cy="65" r="28" fill="#fed7aa"/><path d="M22 65 Q50 20 78 65 Z" fill="#1f2937"/><rect x="25" y="50" width="50" height="18" rx="4" fill="#111827" opacity="0.9"/><rect x="25" y="50" width="50" height="4" fill="#374151"/></svg>` },
+            { id: 2, reqLvl: 1, type: 'standard', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#ec4899"/><path d="M20 90 C20 40 80 40 80 90 Z" fill="#4b5563"/><circle cx="50" cy="65" r="26" fill="#ffedd5"/><circle cx="37" cy="58" r="12" fill="#111827"/><circle cx="63" cy="58" r="12" fill="#111827"/><path d="M49 58 L51 58" stroke="#111827" stroke-width="4"/></svg>` },
+            { id: 3, reqLvl: 1, type: 'standard', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#f59e0b"/><circle cx="50" cy="65" r="28" fill="#fcd34d"/><path d="M20 50 Q50 30 80 50 C80 20 20 20 20 50 Z" fill="#78350f"/><path d="M22 55 L78 55 L72 70 L28 70 Z" fill="#000" opacity="0.8"/></svg>` },
+            { id: 4, reqLvl: 1, type: 'standard', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#10b981"/><circle cx="50" cy="65" r="26" fill="#fecaca"/><path d="M30 30 C 10 10, 50 10, 50 30 C 50 10, 90 10, 70 30 C 90 70, 70 90, 50 60 C 30 90, 10 70, 30 30 Z" fill="#9d174d"/><rect x="28" y="52" width="20" height="14" fill="#111827"/><rect x="52" y="52" width="20" height="14" fill="#111827"/><path d="M48 56 L52 56" stroke="#111827" stroke-width="3"/></svg>` },
+            { id: 5, reqLvl: 5, type: 'legendary', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#0f172a"/><circle cx="50" cy="65" r="28" fill="#e2e8f0"/><path d="M15 50 L30 10 L40 30 L50 5 L60 30 L70 10 L85 50 Z" fill="#38bdf8"/><rect x="20" y="52" width="60" height="12" rx="6" fill="#000"/><rect x="24" y="55" width="52" height="6" rx="3" fill="#06b6d4"/><circle cx="85" cy="58" r="3" fill="#38bdf8"/></svg>` },
+            { id: 6, reqLvl: 5, type: 'legendary', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#4c1d95"/><circle cx="50" cy="65" r="26" fill="#f3e8ff"/><circle cx="25" cy="35" r="15" fill="#d946ef"/><circle cx="75" cy="35" r="15" fill="#d946ef"/><path d="M35 30 Q50 20 65 30 Z" fill="#d946ef"/><path d="M25 65 L45 50 L50 55 L55 50 L75 65 L60 70 L40 70 Z" fill="#000"/><path d="M30 63 L43 54 M70 63 L57 54" stroke="#f0abfc" stroke-width="3"/></svg>` },
+            { id: 7, reqLvl: 10, type: 'legendary', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#7f1d1d"/><circle cx="50" cy="65" r="28" fill="#ffedd5"/><path d="M20 60 C 20 0, 50 20, 50 10 C 50 20, 80 0, 80 60 Z" fill="#f97316"/><path d="M30 60 C 30 20, 50 30, 50 25 C 50 30, 70 20, 70 60 Z" fill="#fef08a"/><path d="M22 55 L78 55 L65 70 L35 70 Z" fill="#000"/><path d="M25 57 L75 57" stroke="#ef4444" stroke-width="2"/></svg>` },
+            { id: 8, reqLvl: 10, type: 'legendary', svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" fill="#064e3b"/><circle cx="50" cy="65" r="26" fill="#ecfdf5"/><path d="M20 90 C15 30 85 30 80 90 Z" fill="#10b981"/><path d="M30 40 L40 25 L50 35 L60 25 L70 40 Z" fill="#fbbf24"/><circle cx="36" cy="58" r="14" fill="#000"/><circle cx="64" cy="58" r="14" fill="#000"/><path d="M36 58 L36 58 M64 58 L64 58" stroke="#34d399" stroke-width="8" stroke-linecap="round"/><path d="M48 58 L52 58" stroke="#000" stroke-width="3"/></svg>` }
+        ];
+
+        const INITIAL_STATE = {
+            userName: 'الطالب الأسطوري',
+            avatarId: 1,
+            lastActionDate: null,
+            lastLoginDate: null,
+            tasks: [],
+            inventory: [],
+            goals: [],
+            mainGoal: '',
+            xp: 0,
+            coins: 0,
+            currentWeek: 1,
+            streak: 0,
+            totalFocusMinutes: 0,
+            rewards: [...DEFAULT_REWARDS],
+            bosses: [JSON.parse(JSON.stringify(DEFAULT_BOSSES[0]))],
+            stats: { study: 0, solve: 0, review: 0, life: 0 }
+        };
+
+        // --- State Management & Undo System ---
+        let state = JSON.parse(JSON.stringify(INITIAL_STATE));
+        let stateSnapshot = null;
+
+        const savedState = localStorage.getItem('hsQuestPremium_v4');
+        if (savedState) {
+            const parsed = JSON.parse(savedState);
+            state = { ...state, ...parsed };
+            // Migrations & Fallbacks
+            if (state.coins === undefined) state.coins = state.xp;
+            if (!state.stats) state.stats = { study: 0, solve: 0, review: 0, life: 0 };
+            if (!state.bosses || state.bosses.length === 0) state.bosses = [JSON.parse(JSON.stringify(DEFAULT_BOSSES[0]))];
+            if (!state.rewards || state.rewards.length === 0) state.rewards = [...DEFAULT_REWARDS];
+            if (!state.userName) state.userName = 'الطالب الأسطوري';
+            if (!state.avatarId) state.avatarId = 1;
+            if (state.streak === undefined) state.streak = 0;
+            if (!state.goals) state.goals = [];
+            if (state.mainGoal === undefined) state.mainGoal = '';
+            if (!state.inventory) state.inventory = [];
+            if (!state.lastLoginDate) state.lastLoginDate = new Date().toDateString();
+        }
+
+        function saveState() {
+            localStorage.setItem('hsQuestPremium_v4', JSON.stringify(state));
+            updateGlobalUI();
+        }
+
+        function saveSnapshot() {
+            stateSnapshot = JSON.parse(JSON.stringify(state));
+        }
+
+        function restoreSnapshot() {
+            if (!stateSnapshot) return;
+            state = JSON.parse(JSON.stringify(stateSnapshot));
+            stateSnapshot = null;
+            saveState();
+            
+            renderTasks();
+            renderGoals();
+            renderBosses();
+            renderStore();
+            renderStats();
+            renderJourney();
+            renderProfile();
+            
+            if (isAudioInitialized && synth) synth.triggerAttackRelease("C3", "16n");
+        }
+
+        const getLevel = () => Math.floor(state.xp / 100) + 1;
+        const getXpProgress = () => state.xp % 100;
+
+        function updateQuote() {
+            document.getElementById('ui-daily-quote').innerText = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+        }
+
+        // --- Daily Streak System ---
+        function checkStreakOnLoad() {
+            if (!state.lastActionDate) return;
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            const lastAction = new Date(state.lastActionDate);
+            lastAction.setHours(0,0,0,0);
+            
+            const diffTime = today - lastAction;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1 && state.streak > 0) {
+                state.streak = 0;
+                saveState();
+                showToast('للأسف ضاعت سلسلة الأيام المتواصلة. ابدأ من جديد بقوة!', 'info');
+            }
+        }
+
+        function checkDailyReset() {
+            const todayStr = new Date().toDateString();
+            if (state.lastLoginDate !== todayStr) {
+                const hasCompletedTasks = state.tasks.some(t => t.completed);
+                
+                state.tasks = state.tasks.filter(t => !t.completed);
+                state.lastLoginDate = todayStr;
+                saveState();
+                
+                if (hasCompletedTasks) {
+                    setTimeout(() => showToast('صباح البدايات الجديدة! 🌅 تم تنظيف المهام المنجزة لتنطلق بقوة اليوم.', 'success'), 1500);
+                }
+            }
+        }
+
+        function updateDailyStreak() {
+            const todayStr = new Date().toDateString();
+            if (state.lastActionDate === todayStr) return;
+            
+            if (state.streak === 0) {
+                state.streak = 1;
+            } else {
+                state.streak += 1;
+                playSound('success');
+                setTimeout(() => {
+                    showToast(`يوم جديد في سلسلة الاستمرارية 🔥 (${state.streak} أيام متواصلة!)`, 'success');
+                }, 1000);
+            }
+            
+            state.lastActionDate = todayStr;
+            saveState();
+        }
+
+        // --- Audio & Effects (Tone.js) ---
+        let isAudioInitialized = false;
+        let synth = null;
+        let ambientNoise = null;
+        let isAmbientPlaying = false;
+        
+        async function initAudio() {
+            if (!isAudioInitialized) {
+                await Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -12;
+                isAudioInitialized = true;
+            }
+        }
+
+        async function playSound(type) {
+            await initAudio();
+            if (!isAudioInitialized || !synth) return;
+            
+            if (type === 'success') synth.triggerAttackRelease(["C5", "E5"], "16n");
+            else if (type === 'reward') {
+                const now = Tone.now();
+                synth.triggerAttackRelease("C4", "16n", now);
+                synth.triggerAttackRelease("E4", "16n", now + 0.1);
+                synth.triggerAttackRelease("G4", "16n", now + 0.2);
+                synth.triggerAttackRelease("C5", "8n", now + 0.3);
+            }
+            else if (type === 'hit') synth.triggerAttackRelease("G2", "16n");
+            else if (type === 'epic_hit') {
+                const now = Tone.now();
+                synth.triggerAttackRelease("E2", "8n", now);
+                synth.triggerAttackRelease("G2", "8n", now + 0.1);
+                synth.triggerAttackRelease("E1", "4n", now + 0.2);
+            }
+        }
+
+        function toggleAmbientSound() {
+            initAudio().then(() => {
+                const btn = document.getElementById('btn-ambient-toggle');
+                if (!ambientNoise) {
+                    const filter = new Tone.Filter(300, "lowpass").toDestination();
+                    ambientNoise = new Tone.Noise("brown").connect(filter);
+                    ambientNoise.volume.value = -8; 
+                }
+
+                if (isAmbientPlaying) {
+                    ambientNoise.stop();
+                    btn.classList.replace('text-blue-400', 'text-white/50');
+                    btn.classList.replace('bg-blue-500/10', 'bg-transparent');
+                    btn.classList.replace('border-blue-500/30', 'border-white/10');
+                    btn.innerHTML = `<i data-lucide="wind" class="w-4 h-4"></i><span class="text-sm font-medium">صوت هواء هادئ (للتركيز)</span>`;
+                } else {
+                    ambientNoise.start();
+                    btn.classList.replace('text-white/50', 'text-blue-400');
+                    btn.classList.replace('bg-transparent', 'bg-blue-500/10');
+                    btn.classList.replace('border-white/10', 'border-blue-500/30');
+                    btn.innerHTML = `<i data-lucide="wind" class="w-4 h-4"></i><span class="text-sm font-medium">إيقاف الصوت الهادئ</span>`;
+                }
+                isAmbientPlaying = !isAmbientPlaying;
+                lucide.createIcons();
+            });
+        }
+
+        function showToast(message, type = 'info', allowUndo = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            let iconHtml = '<i data-lucide="info" class="w-5 h-5 text-blue-400"></i>';
+            let bgClass = 'bg-blue-500/10 border-blue-500/20';
+            
+            if (type === 'success') {
+                iconHtml = '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>';
+                bgClass = 'bg-emerald-500/10 border-emerald-500/20';
+            } else if (type === 'reward' || type === 'coin') {
+                iconHtml = '<i data-lucide="crown" class="w-5 h-5 text-yellow-400"></i>';
+                bgClass = 'bg-yellow-500/10 border-yellow-500/20';
+            } else if (type === 'hit') {
+                iconHtml = '<i data-lucide="swords" class="w-5 h-5 text-red-400"></i>';
+                bgClass = 'bg-red-500/10 border-red-500/20';
+            }
+
+            toast.className = `flex items-center gap-3 p-3.5 rounded-2xl glass-panel shadow-2xl border ${bgClass} toast-enter pointer-events-auto`;
+            toast.innerHTML = `<div class="shrink-0 bg-black/40 p-2 rounded-full">${iconHtml}</div><p class="text-sm font-medium text-white flex-1 leading-snug">${message}</p>`;
+
+            if (allowUndo) {
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'ml-2 shrink-0 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors';
+                undoBtn.innerHTML = `<i data-lucide="undo-2" class="w-3.5 h-3.5"></i> تراجع`;
+                undoBtn.onclick = () => {
+                    restoreSnapshot();
+                    toast.classList.replace('toast-enter', 'toast-leave');
+                    setTimeout(() => toast.remove(), 400);
+                };
+                toast.appendChild(undoBtn);
+            }
+            
+            container.appendChild(toast);
+            lucide.createIcons({ root: toast });
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.classList.replace('toast-enter', 'toast-leave');
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 4000);
+        }
+
+        // --- Navigation ---
+        function switchTab(tabId) {
+            initAudio();
+            const navs = ['dashboard', 'goals', 'focus', 'bosses', 'store', 'stats', 'profile'];
+            navs.forEach(nav => {
+                const btn = document.getElementById(`nav-${nav}`);
+                const section = document.getElementById(`view-${nav}`);
+                
+                if (nav === tabId) {
+                    // Update active button color dynamically based on tab
+                    let activeColor = 'text-blue-400 bg-blue-500/10';
+                    if(tabId === 'goals') activeColor = 'text-purple-400 bg-purple-500/10';
+                    if(tabId === 'bosses') activeColor = 'text-red-400 bg-red-500/10';
+                    if(tabId === 'store') activeColor = 'text-yellow-400 bg-yellow-500/10';
+                    
+                    btn.className = `flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all shadow-inner ${activeColor}`;
+                    section.classList.add('active');
+                } else {
+                    btn.className = "flex-1 min-w-[50px] py-2 rounded-xl flex flex-col items-center gap-1 transition-all text-white/50 hover:text-white";
+                    section.classList.remove('active');
+                }
+            });
+
+            if (tabId === 'dashboard') renderTasks();
+            if (tabId === 'goals') renderGoals();
+            if (tabId === 'bosses') renderBosses();
+            if (tabId === 'store') renderStore();
+            if (tabId === 'stats') { renderStats(); renderJourney(); }
+            if (tabId === 'profile') renderProfile();
+            
+            lucide.createIcons();
+        }
+
+        // --- Goals & Epic Quests Logic ---
+        function updateMainGoal(val) {
+            const newVal = val.trim();
+            if (newVal === state.mainGoal) return;
+            state.mainGoal = newVal;
+            saveState();
+            updateGlobalUI();
+            if (newVal) showToast('تم تحديث هدفك الأعظم! لن نجعلك تنساه أبداً.', 'success');
+        }
+
+        function addBigQuest(event) {
+            event.preventDefault();
+            const input = document.getElementById('new-goal-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            state.goals.unshift({ id: Date.now(), text, completed: false });
+            input.value = ''; input.blur();
+            
+            saveState(); renderGoals(); showToast('تم إضافة المهمة الكبرى بنجاح!', 'info');
+        }
+
+        function toggleBigQuest(id) {
+            const goal = state.goals.find(g => g.id === id);
+            if (!goal) return;
+
+            saveSnapshot();
+            goal.completed = !goal.completed;
+            
+            if (goal.completed) {
+                state.xp += 500; state.coins += 500;
+                updateDailyStreak();
+                
+                playSound('reward');
+                showToast(`إنجاز أسطوري للمهمة الكبرى! +500 XP وذهب`, 'success', true);
+                damageActiveBoss(1500); // Massive damage
+            } else {
+                state.xp = Math.max(0, state.xp - 500);
+                state.coins = Math.max(0, state.coins - 500);
+                showToast('تم التراجع عن المهمة الكبرى', 'info', true);
+            }
+            
+            saveState(); renderGoals();
+        }
+
+        function deleteBigQuest(id, event) {
+            event.stopPropagation();
+            saveSnapshot();
+            state.goals = state.goals.filter(g => g.id !== id);
+            saveState(); renderGoals();
+            showToast('تم الحذف', 'info', true);
+        }
+
+        function renderGoals() {
+            document.getElementById('ui-main-goal-input').value = state.mainGoal;
+            
+            const container = document.getElementById('ui-goals-container');
+            if (state.goals.length === 0) {
+                container.innerHTML = `<div class="glass-panel rounded-3xl p-8 text-center opacity-70 border-dashed border-2 border-white/10 mt-4"><p class="text-sm text-white/70">لا توجد مهام كبرى حالياً. أضف الامتحانات أو المشاريع الكبيرة هنا.</p></div>`;
+                return;
+            }
+            container.innerHTML = state.goals.map(goal => {
+                return `
+                <div onclick="toggleBigQuest(${goal.id})" class="group glass-panel p-4 rounded-2xl flex items-center justify-between cursor-pointer transition-all btn-press border ${goal.completed ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/10 hover:bg-white/[0.03]'}">
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${goal.completed ? 'bg-purple-500 border-purple-500' : 'border-white/20'}">
+                            ${goal.completed ? '<i data-lucide="star" class="w-4 h-4 text-white"></i>' : '<i data-lucide="target" class="w-3.5 h-3.5 text-white/40"></i>'}
+                        </div>
+                        <div class="flex flex-col flex-1 min-w-0">
+                            <span class="text-sm font-bold truncate ${goal.completed ? 'line-through text-purple-200/60' : 'text-white'}">${goal.text}</span>
+                            <span class="text-[10px] font-bold ${goal.completed ? 'text-purple-400/50' : 'text-purple-400'}">+500 XP | ضربة مدمرة للزعيم</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteBigQuest(${goal.id}, event)" class="p-2 hover:bg-red-500/20 text-white/20 hover:text-red-400 rounded-xl transition-colors shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- Profile Logic ---
+        function updateUserName(newName) {
+            if(newName.trim().length === 0) return;
+            state.userName = newName.trim();
+            saveState();
+            showToast('تم تحديث اسم البطل!', 'success');
+        }
+
+        function selectAvatar(id, reqLvl) {
+            if (getLevel() < reqLvl) {
+                showToast(`هذا الأفاتار الأسطوري مقفول! تحتاج للوصول للمستوى ${reqLvl} لفتحه.`, 'hit');
+                return;
+            }
+            state.avatarId = id;
+            saveState();
+            renderProfile();
+            showToast('تم تغيير هويتك بنجاح!', 'success');
+        }
+
+        function renderProfile() {
+            document.getElementById('ui-profile-name').value = state.userName;
+            const container = document.getElementById('ui-avatar-grid');
+            
+            container.innerHTML = AVATARS_DATA.map(av => {
+                const isSelected = state.avatarId === av.id;
+                const isLocked = getLevel() < av.reqLvl;
+                
+                let lockOverlay = '';
+                if (isLocked) {
+                    lockOverlay = `
+                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-10">
+                        <i data-lucide="lock" class="w-6 h-6 text-white/80 mb-1"></i>
+                        <span class="text-[9px] font-bold text-white bg-red-500/80 px-1.5 py-0.5 rounded">Lvl ${av.reqLvl}</span>
+                    </div>`;
+                }
+
+                return `
+                <div onclick="selectAvatar(${av.id}, ${av.reqLvl})" class="relative aspect-square rounded-2xl overflow-hidden cursor-pointer transition-transform btn-press ${isSelected ? 'ring-4 ring-blue-500 scale-95 shadow-[0_0_15px_rgba(59,130,246,0.6)]' : 'ring-1 ring-white/10 hover:ring-white/30'}">
+                    <div class="${isLocked ? 'locked-avatar' : ''}">
+                        ${av.svg}
+                    </div>
+                    ${lockOverlay}
+                </div>`;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        let resetClickCount = 0;
+        function requestReset() {
+            const btn = document.getElementById('btn-reset-data');
+            if (resetClickCount === 0) {
+                resetClickCount++;
+                btn.className = "w-full py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold btn-press transition-all animate-pulse";
+                btn.innerText = "هل أنت متأكد؟ (اضغط مجدداً للتأكيد)";
+                
+                setTimeout(() => {
+                    resetClickCount = 0;
+                    btn.className = "w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold btn-press transition-all";
+                    btn.innerText = "إعادة تهيئة البيانات (Reset)";
+                }, 3000);
+            } else {
+                saveSnapshot();
+                state = JSON.parse(JSON.stringify(INITIAL_STATE));
+                saveState();
+                
+                resetClickCount = 0;
+                btn.className = "w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold btn-press transition-all";
+                btn.innerText = "إعادة تهيئة البيانات (Reset)";
+                
+                switchTab('dashboard');
+                showToast('تم مسح جميع البيانات والعودة لنقطة الصفر.', 'info', true);
+            }
+        }
+
+        // --- Tasks Logic ---
+        function addTask(event) {
+            event.preventDefault();
+            const input = document.getElementById('new-task-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const category = document.querySelector('input[name="taskCategory"]:checked').value;
+            const xpReward = Math.floor(Math.random() * 10) + 15;
+
+            state.tasks.unshift({ id: Date.now(), text, category, completed: false, xp: xpReward });
+            input.value = ''; input.blur();
+            
+            saveState(); renderTasks(); showToast('تمت الإضافة! توكل على الله.', 'info');
+        }
+
+        function toggleTask(id) {
+            const task = state.tasks.find(t => t.id === id);
+            if (!task) return;
+
+            saveSnapshot();
+            task.completed = !task.completed;
+            
+            if (task.completed) {
+                state.xp += task.xp;
+                state.coins += task.xp;
+                state.stats[task.category] += 1;
+                
+                updateDailyStreak();
+                playSound('success');
+                showToast(`عاش! +${task.xp} XP وعملة`, 'success', true);
+                damageActiveBoss(task.xp * 2.5);
+            } else {
+                state.xp = Math.max(0, state.xp - task.xp);
+                state.coins = Math.max(0, state.coins - task.xp);
+                state.stats[task.category] = Math.max(0, state.stats[task.category] - 1);
+                showToast('تم إلغاء إنجاز المهمة', 'info', true);
+            }
+            
+            saveState(); renderTasks();
+        }
+
+        function deleteTask(id, event) {
+            event.stopPropagation();
+            saveSnapshot();
+            state.tasks = state.tasks.filter(t => t.id !== id);
+            saveState(); renderTasks();
+            showToast('تم حذف المهمة', 'info', true);
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('ui-tasks-container');
+            if (state.tasks.length === 0) {
+                container.innerHTML = `<div class="glass-panel rounded-3xl p-8 text-center opacity-70 border-dashed border-2 border-white/10 mt-4"><p class="text-sm text-white/70">لا توجد مهام حالياً. أضف مهامك لتصنع أسطورتك!</p></div>`;
+                return;
+            }
+            container.innerHTML = state.tasks.map(task => {
+                const style = CATEGORIES[task.category];
+                return `
+                <div onclick="toggleTask(${task.id})" class="group glass-panel p-4 rounded-[1.5rem] flex items-center justify-between cursor-pointer transition-all btn-press ${task.completed ? 'opacity-50 bg-white/5' : 'hover:bg-white/[0.03]'}">
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${task.completed ? `${style.bgCheck} border-transparent` : 'border-white/20'}">
+                            ${task.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>' : ''}
+                        </div>
+                        <div class="flex flex-col flex-1 min-w-0">
+                            <span class="text-sm font-medium truncate ${task.completed ? 'line-through text-white/40' : 'text-white/90'}">${task.text}</span>
+                            <span class="text-[10px] font-bold ${task.completed ? 'text-white/40' : style.textCheck}">+${task.xp} XP | ${style.label}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${task.id}, event)" class="p-2 hover:bg-red-500/20 text-white/20 hover:text-red-400 rounded-xl transition-colors shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- Timer Logic ---
+        let timerInterval;
+        let isRunning = false;
+        let isWorkMode = true;
+        const WORK_TIME = 25 * 60; const BREAK_TIME = 5 * 60;
+        let timeLeft = WORK_TIME;
+
+        function updateTimerUI() {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+            
+            const total = isWorkMode ? WORK_TIME : BREAK_TIME;
+            const ring = document.getElementById('timer-progress');
+            ring.style.strokeDashoffset = 283 - (283 * ((total - timeLeft) / total));
+            
+            const modeEl = document.getElementById('timer-mode');
+            if (isWorkMode) {
+                ring.classList.replace('text-emerald-500', 'text-blue-500');
+                modeEl.innerText = 'وقت المذاكرة';
+                modeEl.className = 'text-blue-400 font-bold text-xs bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 mt-2';
+            } else {
+                ring.classList.replace('text-blue-500', 'text-emerald-500');
+                modeEl.innerText = 'وقت الراحة';
+                modeEl.className = 'text-emerald-400 font-bold text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 mt-2';
+            }
+        }
+
+        function toggleTimer() {
+            initAudio();
+            const btn = document.getElementById('btn-timer-toggle');
+            const icon = document.getElementById('icon-timer-toggle');
+
+            if (isRunning) {
+                clearInterval(timerInterval);
+                btn.className = "w-16 h-16 rounded-full bg-blue-600 text-white flex justify-center items-center btn-press transition-all";
+                icon.setAttribute('data-lucide', 'play');
+            } else {
+                btn.className = "w-16 h-16 rounded-full bg-orange-500 text-white flex justify-center items-center btn-press transition-all shadow-[0_0_20px_rgba(249,115,22,0.4)]";
+                icon.setAttribute('data-lucide', 'pause');
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--; updateTimerUI();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        if (isWorkMode) {
+                            state.xp += 50; state.coins += 50; state.totalFocusMinutes += 25;
+                            
+                            updateDailyStreak();
+                            damageActiveBoss(250);
+                            saveState();
+                            
+                            isWorkMode = false; timeLeft = BREAK_TIME;
+                            playSound('reward');
+                            showToast('انتهت الجلسة بطل! +50 ذهب وتم ضرب الزعيم!', 'success');
+                        } else {
+                            isWorkMode = true; timeLeft = WORK_TIME;
+                            playSound('success'); showToast('انتهت الاستراحة. هيا نعود!', 'info');
+                        }
+                        isRunning = false; updateTimerUI();
+                        btn.className = "w-16 h-16 rounded-full bg-blue-600 text-white flex justify-center items-center btn-press transition-all";
+                        icon.setAttribute('data-lucide', 'play');
+                        lucide.createIcons();
+                    }
+                }, 1000);
+            }
+            isRunning = !isRunning; lucide.createIcons();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false; isWorkMode = true; timeLeft = WORK_TIME;
+            document.getElementById('btn-timer-toggle').className = "w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center btn-press transition-all";
+            document.getElementById('icon-timer-toggle').setAttribute('data-lucide', 'play');
+            updateTimerUI(); lucide.createIcons();
+        }
+
+        // --- Boss Logic ---
+        function damageActiveBoss(damage) {
+            const boss = state.bosses.find(b => !b.isDead);
+            if (!boss) return;
+
+            boss.hp = Math.max(0, boss.hp - damage);
+            
+            if (damage >= 1000) playSound('epic_hit');
+            else playSound('hit');
+            
+            showToast(`ضربة موجعة للزعيم! -${Math.floor(damage)} HP`, 'hit');
+            
+            const bossCard = document.getElementById(`boss-card-${boss.id}`);
+            if (bossCard) {
+                bossCard.classList.remove('animate-shake');
+                void bossCard.offsetWidth; 
+                bossCard.classList.add('animate-shake');
+            }
+
+            if (boss.hp <= 0) {
+                boss.isDead = true;
+                const reward = Math.floor(boss.maxHp / 5); // Reward scales with boss HP
+                state.xp += reward; state.coins += reward;
+                playSound('reward');
+                showToast(`أنت أسطورة! قضيت على ${boss.title} وحصلت على ${reward} مكافأة!`, 'reward');
+            }
+            saveState();
+            if (document.getElementById('view-bosses').classList.contains('active')) renderBosses();
+        }
+
+        function spawnNewBoss() {
+            const deadCount = state.bosses.filter(b => b.isDead).length;
+            
+            if (deadCount < DEFAULT_BOSSES.length) {
+                // Spawn next predefined Epic Boss
+                const nextBossTemplate = DEFAULT_BOSSES[deadCount];
+                if(!state.bosses.find(b => b.title === nextBossTemplate.title)) {
+                    state.bosses.push(JSON.parse(JSON.stringify(nextBossTemplate)));
+                }
+            } else {
+                // Infinite Scaling Bosses if all Epic Bosses are defeated
+                const level = deadCount - DEFAULT_BOSSES.length + 1;
+                const maxHp = 30000 + (level * 5000);
+                state.bosses.push({
+                    id: Date.now(),
+                    title: `طيف الظلام الأكبر (مستوى ${level})`,
+                    maxHp: maxHp,
+                    hp: maxHp,
+                    isDead: false
+                });
+            }
+            saveState(); renderBosses();
+        }
+
+        function renderBosses() {
+            const container = document.getElementById('ui-boss-container');
+            const activeBoss = state.bosses.find(b => !b.isDead);
+
+            if (activeBoss) {
+                const hpPercent = (activeBoss.hp / activeBoss.maxHp) * 100;
+                let colorTheme = "from-red-500 to-orange-600";
+                let borderColor = "border-red-500/20";
+                let barColor = "bg-red-500";
+                
+                // Color scaling based on boss difficulty
+                if (activeBoss.maxHp > 10000) { colorTheme = "from-purple-600 to-red-600"; borderColor = "border-purple-500/30"; barColor = "bg-purple-500"; }
+                if (activeBoss.maxHp > 20000) { colorTheme = "from-black to-red-800"; borderColor = "border-red-500/50"; barColor = "bg-red-700"; }
+
+                container.innerHTML = `
+                <div id="boss-card-${activeBoss.id}" class="glass-panel rounded-[2rem] p-6 text-center shadow-[0_0_30px_rgba(220,38,38,0.1)] border ${borderColor} relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-red-500/10 rounded-full blur-[40px] pointer-events-none"></div>
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br ${colorTheme} rounded-full flex items-center justify-center shadow-xl mb-4 border border-white/10">
+                        <i data-lucide="${activeBoss.maxHp > 10000 ? 'ghost' : 'skull'}" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">${activeBoss.title}</h3>
+                    <div class="w-full bg-black/60 h-6 rounded-full border border-white/10 overflow-hidden relative mb-2 shadow-inner">
+                        <div class="h-full ${barColor} transition-all duration-500 flex items-center justify-end px-2" style="width: ${hpPercent}%"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow drop-shadow-md">
+                            ${Math.floor(activeBoss.hp)} / ${activeBoss.maxHp} HP
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-white/60 mt-5 bg-white/5 p-3 rounded-xl border border-white/5">أنجز المهام الصغرى، أنهِ جلسات التركيز، أو دمر <span class="text-purple-400 font-bold">المهام الكبرى</span> لتوجيه ضربات قاضية لهذا الزعيم!</p>
+                </div>`;
+            } else {
+                container.innerHTML = `
+                <div class="glass-panel rounded-[2rem] p-8 text-center flex flex-col items-center border-dashed border-2 border-white/10">
+                    <i data-lucide="shield-check" class="w-16 h-16 text-emerald-400 mb-4 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]"></i>
+                    <h3 class="text-lg font-bold text-white mb-2">المنطقة آمنة (مؤقتاً)</h3>
+                    <p class="text-sm text-white/50 mb-6">لقد قضيت على الزعيم، التقط أنفاسك واستعد للتحدي القادم.</p>
+                    <button onclick="spawnNewBoss()" class="px-6 py-3 bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl font-bold text-sm hover:bg-red-600/30 transition-all flex items-center gap-2 btn-press">
+                        <i data-lucide="swords" class="w-4 h-4"></i> استدعاء الزعيم التالي
+                    </button>
+                </div>`;
+            }
+            lucide.createIcons();
+        }
+
+        // --- Store Logic ---
+        function addReward(e) {
+            e.preventDefault();
+            const title = document.getElementById('new-reward-input').value.trim();
+            const cost = parseInt(document.getElementById('new-reward-cost').value);
+            if (!title || isNaN(cost) || cost <= 0) return;
+            
+            state.rewards.unshift({ id: Date.now(), title, cost });
+            document.getElementById('new-reward-input').value = '';
+            document.getElementById('new-reward-cost').value = '';
+            saveState(); renderStore(); showToast('تم إضافة المكافأة للمتجر', 'success');
+        }
+
+        function buyReward(id) {
+            const reward = state.rewards.find(r => r.id === id);
+            if (state.coins >= reward.cost) {
+                saveSnapshot();
+                state.coins -= reward.cost;
+                state.inventory.unshift({ id: Date.now(), title: reward.title });
+                playSound('reward');
+                showToast(`تم الشراء: ${reward.title}. تجدها في مخزونك بالأسفل!`, 'success', true);
+                saveState(); renderStore(); updateGlobalUI();
+            } else {
+                showToast(`ليس لديك عملات كافية. تحتاج ${reward.cost - state.coins} إضافية.`, 'info');
+            }
+        }
+
+        function activateInventoryItem(id) {
+            const itemIndex = state.inventory.findIndex(i => i.id === id);
+            if (itemIndex === -1) return;
+            
+            const item = state.inventory[itemIndex];
+            saveSnapshot();
+            state.inventory.splice(itemIndex, 1);
+            
+            playSound('success');
+            showToast(`تم تفعيل: ${item.title}. استمتع بوقتك ومكافأتك! 🎉`, 'reward', true);
+            
+            saveState(); renderStore();
+        }
+
+        function deleteReward(id, e) {
+            e.stopPropagation();
+            state.rewards = state.rewards.filter(r => r.id !== id);
+            saveState(); renderStore();
+        }
+
+        function renderStore() {
+            document.getElementById('ui-store-coins').innerText = state.coins;
+            const container = document.getElementById('ui-rewards-container');
+            
+            container.innerHTML = state.rewards.map(reward => {
+                const canAfford = state.coins >= reward.cost;
+                return `
+                <div class="glass-panel p-4 rounded-2xl flex flex-col justify-between border-t border-white/5 relative group">
+                    <button onclick="deleteReward(${reward.id}, event)" class="absolute top-2 left-2 p-1.5 text-white/20 hover:text-red-400 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <h4 class="text-sm font-bold text-white mb-4 pr-6 leading-relaxed">${reward.title}</h4>
+                    <button onclick="buyReward(${reward.id})" class="w-full py-2.5 rounded-xl font-bold text-xs flex justify-center items-center gap-2 btn-press transition-all ${canAfford ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-white/5 text-white/30 cursor-not-allowed'}">
+                        <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                        شراء بـ ${reward.cost} ذهب
+                    </button>
+                </div>`;
+            }).join('');
+            
+            const invContainer = document.getElementById('ui-inventory-container');
+            if (state.inventory.length === 0) {
+                invContainer.innerHTML = `<div class="glass-panel rounded-2xl p-6 text-center opacity-50 border-dashed border-2 border-white/10"><p class="text-sm text-white/70">المخزون فارغ حالياً. قم بشراء مكافآت من المتجر لتظهر هنا وتفعلها متى شئت!</p></div>`;
+            } else {
+                invContainer.innerHTML = state.inventory.map(item => `
+                <div class="glass-panel p-3.5 rounded-2xl flex items-center justify-between border border-emerald-500/20 bg-emerald-500/5 group shadow-lg">
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                            <i data-lucide="ticket" class="w-5 h-5 text-emerald-400"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-white leading-tight truncate pr-1">${item.title}</h4>
+                    </div>
+                    <button onclick="activateInventoryItem(${item.id})" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 btn-press transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] shrink-0 mr-2">
+                        تفعيل <i data-lucide="play-circle" class="w-4 h-4"></i>
+                    </button>
+                </div>`).join('');
+            }
+            
+            lucide.createIcons();
+        }
+
+        // --- Stats & Journey Logic ---
+        function renderStats() {
+            const s = state.stats;
+            const total = s.study + s.solve + s.review + s.life || 1;
+            
+            const html = Object.keys(CATEGORIES).map(key => {
+                const cat = CATEGORIES[key];
+                const count = s[key] || 0;
+                const percent = Math.round((count / total) * 100);
+                
+                return `
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1.5">
+                        <span class="${cat.textCheck} flex items-center gap-1.5"><div class="w-2 h-2 rounded-full ${cat.color}"></div> ${cat.label}</span>
+                        <span class="text-white/60">${count} مهام (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-black/40 h-2.5 rounded-full overflow-hidden">
+                        <div class="h-full ${cat.bgCheck} stat-bar-fill rounded-full" style="width: ${percent}%"></div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            document.getElementById('ui-stats-bars').innerHTML = html;
+        }
+
+        function advanceWeek() {
+            if (state.currentWeek < 52) {
+                saveSnapshot();
+                state.currentWeek++; state.xp += 200; state.coins += 200;
+                playSound('reward'); 
+                showToast(`تهانينا! تقدمت للأسبوع ${state.currentWeek} وحصلت على مكافأة.`, 'reward', true);
+                saveState(); renderJourney();
+            }
+        }
+
+        function renderJourney() {
+            const container = document.getElementById('ui-timeline');
+            container.innerHTML = STAGES.map((stage, index) => {
+                const isCurrentStage = state.currentWeek >= stage.weeks[0] && state.currentWeek <= stage.weeks[1];
+                const isPastStage = state.currentWeek > stage.weeks[1];
+                
+                let weeksHTML = '';
+                for(let w = stage.weeks[0]; w <= stage.weeks[1]; w++) {
+                    const isPassed = w < state.currentWeek;
+                    const isCurrent = w === state.currentWeek;
+                    const dotClass = isCurrent ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10' 
+                                 : isPassed ? 'bg-white/10 text-white/40' : 'bg-black/50 border border-white/5 text-white/20';
+                    weeksHTML += `<div class="w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-bold ${dotClass}">${w}</div>`;
+                }
+
+                return `
+                <div class="flex gap-4">
+                    <div class="relative flex flex-col items-center">
+                        <div class="w-4 h-4 rounded-full border-4 border-[#050505] z-10 mt-5 shrink-0 ${isCurrentStage ? 'bg-blue-500 animate-pulse' : isPastStage ? 'bg-white/30' : 'bg-black border-white/10'}"></div>
+                        ${index !== STAGES.length - 1 ? `<div class="w-[2px] bg-white/5 h-full absolute top-8 bottom-[-10px]"></div>` : ''}
+                    </div>
+                    <div class="flex-1 glass-panel rounded-2xl p-4 mb-4 ${isCurrentStage ? 'border-white/20 bg-white/[0.02]' : 'opacity-60 border-white/5'}">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${stage.color} flex items-center justify-center">
+                                <i data-lucide="${isPastStage ? 'check' : stage.icon}" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">${stage.name}</h3>
+                                <p class="text-[10px] text-white/50">أسابيع ${stage.weeks[0]} - ${stage.weeks[1]}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 mt-3">${weeksHTML}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- Global ---
+        function updateGlobalUI() {
+            document.getElementById('ui-header-name').innerText = state.userName;
+            document.getElementById('ui-header-level').innerText = `Lvl ${getLevel()}`;
+            document.getElementById('ui-header-streak').innerText = state.streak;
+            document.getElementById('ui-header-week').innerText = state.currentWeek;
+            document.getElementById('ui-header-coins').innerText = state.coins;
+            
+            // Main Goal Banner Display in Dashboard
+            const goalBanner = document.getElementById('ui-main-goal-banner');
+            const goalText = document.getElementById('ui-main-goal-text');
+            if (state.mainGoal && state.mainGoal.trim() !== '') {
+                goalText.innerText = state.mainGoal;
+                goalBanner.classList.remove('hidden');
+                goalBanner.classList.add('flex');
+            } else {
+                goalBanner.classList.add('hidden');
+                goalBanner.classList.remove('flex');
+            }
+
+            // Render current selected avatar in header
+            const activeAvatar = AVATARS_DATA.find(a => a.id === state.avatarId) || AVATARS_DATA[0];
+            document.getElementById('ui-header-avatar').innerHTML = activeAvatar.svg;
+
+            // Streak Icon feedback
+            const streakIcon = document.getElementById('streak-icon');
+            if (state.streak > 0) {
+                streakIcon.classList.replace('text-white/50', 'text-orange-400');
+                streakIcon.parentElement.classList.replace('border-white/10', 'border-orange-500/20');
+                streakIcon.parentElement.classList.replace('bg-white/5', 'bg-orange-500/10');
+            } else {
+                streakIcon.classList.replace('text-orange-400', 'text-white/50');
+                streakIcon.parentElement.classList.replace('border-orange-500/20', 'border-white/10');
+                streakIcon.parentElement.classList.replace('bg-orange-500/10', 'bg-white/5');
+            }
+            
+            document.getElementById('ui-xp-bar').style.width = `${getXpProgress()}%`;
+            document.getElementById('ui-xp-text').innerText = `${getXpProgress()} / 100`;
+            
+            const storeCoinsEl = document.getElementById('ui-store-coins');
+            if (storeCoinsEl) storeCoinsEl.innerText = state.coins;
+            
+            if (document.getElementById('view-profile').classList.contains('active')) {
+                renderProfile();
+            }
+        }
+
+        window.onload = () => {
+            lucide.createIcons();
+            checkStreakOnLoad();
+            checkDailyReset();
+            updateTimerUI();
+            updateGlobalUI();
+            updateQuote();
+            switchTab('dashboard');
+        };
+    </script>
+</body>
+</html>
