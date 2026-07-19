@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rodo - رحلة الأسطورة</title>
+    <title>Rodo - العبها صح</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -870,7 +870,7 @@
     ];
 
     const INITIAL_STATE = {
-        userName: 'الطالب الأسطوري',
+        userName: 'اسمك هنا',
         avatarId: 1,
         lastActionDate: null,
         lastLoginDate: null,
@@ -926,7 +926,7 @@
             
             if (!state.bosses || state.bosses.length === 0) state.bosses = [JSON.parse(JSON.stringify(DEFAULT_BOSSES[0]))];
             if (!state.rewards || state.rewards.length === 0) state.rewards = [...DEFAULT_REWARDS];
-            if (!state.userName) state.userName = 'الطالب الأسطوري';
+            if (!state.userName) state.userName = 'اسمك هنا';
             if (!state.avatarId) state.avatarId = 1;
             if (state.streak === undefined) state.streak = 0;
             if (!state.goals) state.goals = [];
