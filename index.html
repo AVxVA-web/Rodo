@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="w-full overflow-x-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rodo - العبها صح</title>
+    <meta name="description" content="تطبيق Rodo لتنظيم الوقت والمذاكرة بأسلوب تحفيزي وزيادة الإنتاجية.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+</head>
+
+<body class="selection:bg-blue-500/30 min-h-[100dvh] w-full overflow-x-hidden bg-[#050505] text-[#F5F5F7]">
+    
+    <!-- Premium Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-[9999] bg-[#050505] flex flex-col items-center justify-center w-full h-full">
+        <img src="assets/images/logo.webp" alt="Rodo Logo" width="128" height="128" class="w-28 h-28 sm:w-32 sm:h-32 object-contain mb-8" onerror="this.hidden=true;this.nextElementSibling.classList.add('is-visible');">
+        <span class="brand-fallback" aria-hidden="true">R</span>
+        <p class="text-xl sm:text-2xl font-semibold tracking-widest text-white/90">العبها صح</p>
+    </div>
+
+    <script src="js/app.js" defer></script>
+
+    <div class="ambient-glow bg-blue-600/30 w-[80vw] h-[60vw] top-[-10%] left-[-10%] md:w-[40vw] md:h-[40vw]"></div>
+    <div class="ambient-glow bg-purple-600/20 w-[70vw] h-[70vw] bottom-[10%] right-[-20%] md:w-[30vw] md:h-[30vw]"></div>
+
+    <div id="toast-container" class="fixed top-[env(safe-area-inset-top,1.5rem)] left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-[92vw] max-w-[92vw] md:max-w-sm pointer-events-none mt-4"></div>
+
+    <header class="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 pt-[env(safe-area-inset-top)] w-full">
+        <div class="w-full max-w-screen-xl mx-auto px-4 min-h-[44px] h-auto py-2 flex items-center justify-between">
+            <div class="flex items-center gap-3 w-full">
+                <span class="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 pl-2 border-l border-white/10 hidden sm:block">Rodo</span>
+                <div id="ui-header-avatar-container" class="relative w-11 h-11 shrink-0"></div>
+                
+                <div class="flex flex-col mr-2 min-w-0">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="text-lg font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 sm:hidden block shrink-0">Rodo</span>
+                        <h1 id="ui-header-name" class="text-lg font-black tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-l from-white to-white/70 truncate max-w-[150px] sm:max-w-[300px]">الأسطورة</h1>
+                    </div>
+                    <p class="text-[11px] text-white/50 font-medium">الأسبوع <span id="ui-header-week" class="text-white/80">1</span></p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-screen-xl mx-auto px-4 sm:px-6 pt-6 relative z-10 overflow-x-hidden">
+        
+        <section id="view-dashboard" class="view-section active space-y-6">
+            
+            <!-- Premium Stats Card -->
+            <div class="glass-panel rounded-2xl p-3 grid grid-cols-3 gap-2 shadow-lg">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 shadow-sm text-center" title="العملات الذهبية">
+                    <i data-lucide="coins" class="w-5 h-5 sm:w-4 sm:h-4"></i>
+                    <span id="ui-header-coins" class="text-sm sm:text-base font-bold mt-0.5">0</span>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 shadow-sm text-center" title="أيام متتالية">
+                    <i data-lucide="flame" class="w-5 h-5 sm:w-4 sm:h-4" id="streak-icon"></i>
+                    <span id="ui-header-streak" class="text-sm sm:text-base font-bold mt-0.5">0</span>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shadow-sm text-center">
+                    <span id="ui-header-level" class="text-sm sm:text-base font-bold mt-0.5">Lvl 1</span>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-[2rem] p-6 relative overflow-hidden shadow-2xl">
+                <div class="absolute right-0 top-0 w-40 h-40 bg-blue-500/20 rounded-full blur-[60px] pointer-events-none"></div>
+                <h2 class="text-xl font-black mb-2 text-white">مرحباً يا بطل!</h2>
+                
+                <div id="ui-main-goal-banner" class="hidden items-center gap-3 mt-4 mb-4 bg-gradient-to-r from-purple-500/15 to-indigo-500/10 p-4 rounded-2xl border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                    <div class="w-11 h-11 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 border border-purple-500/30">
+                        <i data-lucide="target" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-[10px] text-purple-300/80 font-bold mb-0.5">تذكر دائماً لماذا بدأت اليوم:</p>
+                        <p id="ui-main-goal-text" class="text-white font-bold text-sm leading-tight"></p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3 mt-3 mb-5 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <i data-lucide="quote" class="w-5 h-5 text-blue-400 shrink-0 mt-0.5 opacity-70"></i>
+                    <p id="ui-daily-quote" class="text-white/70 text-sm leading-relaxed font-medium italic"></p>
+                </div>
+                <div class="w-full bg-[#0A0A0C] h-3.5 rounded-full border border-white/10 overflow-hidden relative shadow-inner">
+                    <div id="ui-xp-bar" class="h-full bg-gradient-to-l from-blue-500 to-cyan-400 rounded-full transition-all duration-1000 ease-out w-0 relative">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-2 text-[11px] font-bold text-white/50">
+                    <span>الخبرة للتالي</span>
+                    <span id="ui-xp-text" class="text-white/80">0 / 100</span>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-5 shadow-xl border border-emerald-500/15 bg-emerald-500/[0.02]">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                            <i data-lucide="heart" class="w-4 h-4"></i>
+                        </div>
+                        <h3 class="text-sm font-black text-white">متتبع العادات اليومية</h3>
+                    </div>
+                    <span class="text-[10px] text-emerald-400/80 font-semibold bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">+10 XP لكل عادة</span>
+                </div>
+                
+                <form onsubmit="addHabit(event)" class="flex gap-2 mb-4 bg-black/40 p-1.5 rounded-xl border border-white/5 w-full">
+                    <input type="text" id="new-habit-input" aria-label="إضافة عادة يومية جديدة" placeholder="اضف عادة يومية جديدة..." required class="flex-1 w-full bg-transparent border-none text-white px-3 text-base min-h-[44px] focus:outline-none placeholder-white/20 font-medium">
+                    <button type="submit" class="px-4 py-2 min-h-[44px] rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center btn-press shrink-0 transition-all text-sm font-bold gap-1">
+                        <i data-lucide="plus" class="w-4 h-4"></i> أضف
+                    </button>
+                </form>
+
+                <div id="ui-habits-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-3 shadow-lg">
+                <form onsubmit="addTask(event)" class="flex flex-col gap-3 w-full">
+                    <div class="flex items-center gap-2 px-2 pt-1 w-full">
+                        <input type="text" id="new-task-input" aria-label="إضافة مهمة جديدة" placeholder="ما هي مهمتك القادمة؟" required class="flex-1 w-full bg-transparent border-none text-white px-3 text-base min-h-[44px] focus:outline-none placeholder-white/30 font-medium">
+                       <button type="submit" aria-label="إضافة عنصر جديد" class="w-11 h-11 min-w-[44px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                              <i data-lucide="plus" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 px-2 pb-2 overflow-x-auto hide-scrollbar flex-nowrap w-full">
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="study" checked class="sr-only peer">
+                            <div class="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-purple-500/15 peer-checked:text-purple-300 peer-checked:border-purple-500/40 transition-all gap-2">
+                                <div class="w-2 h-2 rounded-full bg-purple-400"></div> مذاكرة
+                            </div>
+                        </label>
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="solve" class="sr-only peer">
+                            <div class="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-blue-500/15 peer-checked:text-blue-300 peer-checked:border-blue-500/40 transition-all gap-2">
+                                <div class="w-2 h-2 rounded-full bg-blue-400"></div> حل وتدريب
+                            </div>
+                        </label>
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="review" class="sr-only peer">
+                            <div class="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-orange-500/15 peer-checked:text-orange-300 peer-checked:border-orange-500/40 transition-all gap-2">
+                                <div class="w-2 h-2 rounded-full bg-orange-400"></div> مراجعة
+                            </div>
+                        </label>
+                        <label class="cursor-pointer shrink-0 flex">
+                            <input type="radio" name="taskCategory" value="life" class="sr-only peer">
+                            <div class="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-xl text-xs font-bold border border-white/10 text-white/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-300 peer-checked:border-emerald-500/40 transition-all gap-2">
+                                <div class="w-2 h-2 rounded-full bg-emerald-400"></div> شخصي
+                            </div>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div id="ui-tasks-container" class="space-y-3 pb-8"></div>
+        </section>
+
+        <section id="view-goals" class="view-section space-y-6 pb-8">
+            <div class="glass-panel rounded-[2rem] p-6 shadow-xl relative overflow-hidden border-purple-500/20">
+                <div class="absolute -left-10 -top-10 w-32 h-32 bg-purple-600/20 rounded-full blur-[50px] pointer-events-none"></div>
+                <h2 class="text-xl font-black mb-2 text-white flex items-center gap-2">
+                    <i data-lucide="crown" class="w-6 h-6 text-yellow-400"></i> الهدف الأعظم
+                </h2>
+                <p class="text-sm text-white/60 mb-5 leading-relaxed">اكتب حلمك النهائي هنا (مثال: كلية الطب، الهندسة، التفوق...). سنقوم بتذكيرك به يومياً لتبقى شعلتك متقدة ولا تنطفئ.</p>
+                <div class="relative w-full">
+                    <input type="text" id="ui-main-goal-input" onchange="updateMainGoal(this.value)" placeholder="اكتب حلمك الذي تسعى إليه..." aria-label="الهدف الأعظم" class="w-full bg-black/40 border border-purple-500/30 rounded-xl px-4 text-base min-h-[44px] text-white font-bold focus:outline-none focus:border-purple-400 transition-colors shadow-inner placeholder-white/20 pl-12">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-purple-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50"></i>
+                </div>
+            </div>
+
+            <div class="text-center mb-4 mt-8">
+                <h2 class="text-xl font-bold text-white mb-1">المهام الكبرى (Epic Quests)</h2>
+                <p class="text-white/50 text-xs">امتحانات شاملة، مراجعة مادة كاملة. مكافآتها ضخمة جداً!</p>
+            </div>
+
+            <form onsubmit="addBigQuest(event)" class="glass-panel rounded-2xl p-3 flex gap-2 shadow-lg w-full">
+                <input type="text" id="new-goal-input" placeholder="أضف مهمة كبرى (مثال: امتحان شامل)" aria-label="اسم المهمة الكبرى" required class="flex-1 w-full bg-transparent border-none text-white px-3 text-base min-h-[44px] focus:outline-none placeholder-white/30 font-medium">
+                <button type="submit" aria-label="إضافة المهمة الكبرى" class="w-11 h-11 min-w-[44px] rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(147,51,234,0.4)]">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                </button>
+            </form>
+
+            <div id="ui-goals-container" class="space-y-3 pb-4"></div>
+        </section>
+
+        <section id="view-focus" class="view-section pb-10 space-y-6">
+            <div class="focus-panel glass-panel rounded-[2rem] p-6 shadow-xl relative overflow-hidden bg-gradient-to-br from-white/[0.02] to-transparent">
+                <div class="absolute right-0 top-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="flame" class="w-5 h-5 text-orange-400"></i> شعلة الاستمرارية
+                </h3>
+                <div class="w-full overflow-x-auto heatmap-scroll pb-3 pt-1" dir="ltr">
+                    <div id="heatmap-container" class="flex gap-1.5 w-max px-1"></div>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 mt-2 px-2 opacity-70">
+                    <span class="text-[9px] text-white/50 font-bold ml-1">أقل</span>
+                    <div class="w-3 h-3 rounded-[2px] bg-white/5 border border-white/5"></div>
+                    <div class="w-3 h-3 rounded-[2px] bg-blue-500/30 border border-blue-500/20"></div>
+                    <div class="w-3 h-3 rounded-[2px] bg-blue-500/60 border border-blue-500/40"></div>
+                    <div class="w-3 h-3 rounded-[2px] bg-blue-400 border border-blue-300"></div>
+                    <span class="text-[9px] text-white/50 font-bold mr-1">أكثر</span>
+                </div>
+            </div>
+
+            <div class="focus-panel glass-panel rounded-[2rem] p-6 shadow-xl relative overflow-hidden mt-6 flex flex-col items-center py-10 bg-gradient-to-br from-white/[0.02] to-transparent">
+                <div class="absolute inset-0 bg-blue-500/5 transition-opacity duration-700 opacity-0" id="timer-pulse-bg"></div>
+
+                <div class="text-center mb-8 relative z-10 w-full">
+                    <h2 class="text-2xl font-bold mb-2 text-white">محرك التركيز</h2>
+                    <p class="text-white/50 text-sm">ابدأ جلسة دراسية وعند الانتهاء قم بحفظها للمادة المناسبة.</p>
+                </div>
+
+                <div class="relative flex items-center justify-center w-64 h-64 sm:w-72 sm:h-72 mb-10 z-10">
+                    <div class="absolute inset-0 rounded-full border-[3px] border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.5)_inset] transition-transform duration-700" id="stopwatch-ring-bg"></div>
+                    <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="0.5" class="text-blue-500/20" stroke-dasharray="2 4"></circle>
+                        <circle id="stopwatch-spinner" cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-400 opacity-0 transition-opacity duration-500" stroke-dasharray="301.59" stroke-dashoffset="250" stroke-linecap="round"></circle>
+                    </svg>
+
+                    <div class="absolute flex flex-col items-center justify-center text-center">
+                        <span id="stopwatch-display" class="text-5xl sm:text-6xl font-black tabular-nums tracking-tight text-white/90 mb-2 timer-glow" style="font-variant-numeric: tabular-nums;">00:00</span>
+                        <span id="stopwatch-subject-display" class="text-blue-400 font-bold text-xs bg-blue-500/10 px-4 py-2 min-h-[32px] rounded-full border border-blue-500/20 shadow-inner mt-2 transition-all duration-300">جاهز للبدء</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 sm:gap-6 z-10">
+                    <button onclick="resetStopwatch()" id="btn-stopwatch-reset" class="w-12 h-12 rounded-full glass-panel border-white/10 text-white/50 flex items-center justify-center btn-focus-action hover:bg-white/5 opacity-50 pointer-events-none scale-95" aria-label="إعادة تعيين">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    </button>
+                    
+                    <button onclick="toggleStopwatch()" id="btn-stopwatch-toggle" aria-label="تشغيل أو إيقاف المؤقت" class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center btn-focus-action shadow-[0_0_25px_rgba(37,99,235,0.4)]">
+                         <i data-lucide="play" id="icon-stopwatch-toggle" class="w-7 h-7 ml-1"></i>
+                    </button>
+                    
+                    <button onclick="finishSession()" id="btn-stopwatch-finish" class="w-12 h-12 rounded-full glass-panel border-emerald-500/30 text-emerald-400 bg-emerald-500/10 flex items-center justify-center btn-focus-action hover:bg-emerald-500/20 opacity-50 pointer-events-none scale-95" aria-label="حفظ الجلسة">
+                        <i data-lucide="check-check" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 mt-10 z-10 w-full sm:w-auto px-4 sm:px-0">
+                    <button onclick="toggleAmbientSound()" id="btn-ambient-toggle" class="w-full sm:w-auto px-5 py-2 min-h-[44px] rounded-2xl border border-white/10 text-white/50 flex items-center justify-center gap-2.5 btn-press transition-all hover:bg-white/5">
+                        <i data-lucide="wind" class="w-5 h-5"></i>
+                        <span class="text-sm font-medium">صوت هواء هادئ</span>
+                    </button>
+
+                    <button onclick="toggleZenMode()" class="w-full sm:w-auto px-5 py-2 min-h-[44px] rounded-2xl border border-blue-500/20 text-blue-400 bg-blue-500/5 hover:bg-blue-500/10 flex items-center justify-center gap-2.5 btn-press transition-all">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span class="text-sm font-medium">وضع العزلة (Zen)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="focus-panel glass-panel rounded-[2rem] p-6 shadow-xl relative mt-8 bg-gradient-to-br from-white/[0.02] to-transparent w-full">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="bar-chart" class="w-5 h-5 text-indigo-400"></i> سجل المذاكرة التراكمي
+                </h3>
+                <div class="overflow-x-auto hide-scrollbar pb-2 w-full">
+                    <table class="w-full text-right border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="text-xs text-white/50 border-b border-white/10">
+                                <th class="pb-3 font-medium">المادة</th>
+                                <th class="pb-3 font-medium text-center">اليوم</th>
+                                <th class="pb-3 font-medium text-center">الأسبوع</th>
+                                <th class="pb-3 font-medium text-center">الإجمالي</th>
+                                <th class="pb-3 font-medium text-center">النسبة</th>
+                                <th class="pb-3 font-medium pl-2 w-28"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="study-subjects-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="focus-panel glass-panel rounded-[2rem] p-6 shadow-xl relative overflow-hidden mt-8 bg-gradient-to-br from-white/[0.02] to-transparent">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="brain-circuit" class="w-5 h-5 text-purple-400"></i> تحليلات ذكية
+                </h3>
+                <div id="smart-insights-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"></div>
+            </div>
+
+            <div class="focus-panel glass-panel rounded-[2rem] p-6 shadow-xl relative overflow-hidden mt-8 bg-gradient-to-br from-white/[0.02] to-transparent">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="history" class="w-5 h-5 text-orange-400"></i> الجلسات الأخيرة
+                </h3>
+                <div id="recent-sessions-container" class="space-y-2 max-h-[40vh] overflow-y-auto hide-scrollbar pr-1 w-full"></div>
+            </div>
+        </section>
+
+        <section id="view-store" class="view-section space-y-6 pb-8">
+            <!-- Store Header -->
+            <div class="glass-panel rounded-[2rem] p-6 relative overflow-hidden shadow-xl border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-transparent w-full">
+                <div class="absolute -left-10 -top-10 w-32 h-32 bg-yellow-500/20 rounded-full blur-[50px] pointer-events-none"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div>
+                        <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                            <i data-lucide="store" class="w-6 h-6 text-yellow-400"></i> متجر RODO
+                        </h2>
+                        <p class="text-xs text-white/60 mt-1">نظام المكافآت والتخصيص الخاص بك. استثمر عملاتك لتطوير تجربتك.</p>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-black/40 px-4 py-2 rounded-xl border border-yellow-500/20 shadow-inner">
+                        <span class="text-[10px] text-white/50 font-bold mb-0.5">رصيدك</span>
+                        <div class="flex items-center gap-1.5">
+                            <span id="ui-store-coins-magic" class="text-yellow-400 font-black text-lg">0</span>
+                            <i data-lucide="coins" class="w-4 h-4 text-yellow-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Boosts -->
+            <div id="ui-store-active-boosts" class="hidden flex-col gap-3 w-full">
+                <h3 class="text-sm font-bold text-white/70 flex items-center gap-2 px-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-orange-400"></i> المعززات النشطة
+                </h3>
+                <div id="ui-active-boosts-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                    <!-- JS injects active boosts here -->
+                </div>
+            </div>
+
+            <!-- Category Navigation -->
+            <div class="flex overflow-x-auto hide-scrollbar gap-2 pb-2 w-full" id="ui-store-categories">
+                <button class="store-category-btn active px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 whitespace-nowrap flex items-center gap-2 shrink-0" data-category="storefront">
+                    <i data-lucide="star" class="w-4 h-4"></i> الواجهة
+                </button>
+                <button class="store-category-btn px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-2 shrink-0" data-category="catalog">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i> الكتالوج
+                </button>
+                <button class="store-category-btn px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-2 shrink-0" data-category="rewards">
+                    <i data-lucide="gift" class="w-4 h-4"></i> المكافآت وصناديق الحظ
+                </button>
+                <button class="store-category-btn px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-2 shrink-0" data-category="inventory">
+                    <i data-lucide="backpack" class="w-4 h-4"></i> الخزانة
+                </button>
+            </div>
+
+            <!-- Storefront View (Default Active) -->
+            <div id="ui-store-front" class="w-full flex flex-col gap-6">
+                <!-- Featured Item Placeholder -->
+                <div id="ui-store-featured" class="w-full"></div>
+                
+                <!-- Daily Deals Placeholder -->
+                <div id="ui-store-daily-deals-container" class="w-full">
+                    <h3 class="text-sm font-bold text-white/70 flex items-center gap-2 px-2 mb-3">
+                        <i data-lucide="clock" class="w-4 h-4 text-blue-400"></i> عروض اليوم
+                    </h3>
+                    <div id="ui-store-daily-deals" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"></div>
+                </div>
+            </div>
+
+            <!-- Catalog View -->
+            <div id="ui-store-catalog" class="hidden w-full flex-col gap-4">
+                <!-- Catalog Sub-navigation -->
+                <div class="flex overflow-x-auto hide-scrollbar gap-2 pb-2 w-full" id="ui-catalog-subtabs">
+                    <button class="catalog-subtab-btn active px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-blue-500/20 text-blue-400 border border-blue-500/30 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="all" onclick="setCatalogSubtab('all')">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> الكل
+                    </button>
+                    <button class="catalog-subtab-btn px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="themes" onclick="setCatalogSubtab('themes')">
+                        <i data-lucide="palette" class="w-3.5 h-3.5"></i> مظاهر
+                    </button>
+                    <button class="catalog-subtab-btn px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="titles" onclick="setCatalogSubtab('titles')">
+                        <i data-lucide="award" class="w-3.5 h-3.5"></i> ألقاب
+                    </button>
+                    <button class="catalog-subtab-btn px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="effects" onclick="setCatalogSubtab('effects')">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> مؤثرات
+                    </button>
+                    <button class="catalog-subtab-btn px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="boosts" onclick="setCatalogSubtab('boosts')">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i> معززات
+                    </button>
+                    <button class="catalog-subtab-btn px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="powerups" onclick="setCatalogSubtab('powerups')">
+                        <i data-lucide="battery-charging" class="w-3.5 h-3.5"></i> قدرات
+                    </button>
+                    <button class="catalog-subtab-btn px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all bg-white/5 text-white/50 border border-white/5 hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5 shrink-0" data-subtab="avatars" onclick="setCatalogSubtab('avatars')">
+                        <i data-lucide="user-circle" class="w-3.5 h-3.5"></i> أفاتار
+                    </button>
+                </div>
+
+                <div id="ui-store-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <!-- Products will be injected here by app.js -->
+                </div>
+                
+                <!-- Empty State for Grid -->
+                <div id="ui-store-grid-empty" class="hidden glass-panel rounded-2xl p-8 text-center opacity-70 border-dashed border-2 border-white/10 w-full mt-4">
+                    <i data-lucide="search-x" class="w-10 h-10 text-white/30 mx-auto mb-3"></i>
+                    <p class="text-sm text-white/70">لا توجد عناصر في هذا القسم حالياً.</p>
+                </div>
+            </div>
+
+            <!-- Rewards View (Chests, Wheel, Shards, Tickets) -->
+            <div id="ui-store-rewards" class="hidden w-full flex-col gap-6">
+                <!-- Tickets & Currency Status Header -->
+                <div class="glass-panel rounded-2xl p-4 grid grid-cols-3 gap-3 text-center border border-yellow-500/20">
+                    <div class="flex flex-col items-center">
+                        <span class="text-[11px] text-white/50 font-bold mb-1">تذاكر Scholar</span>
+                        <span id="ui-ticket-scholar" class="text-lg font-black text-blue-400">0</span>
+                    </div>
+                    <div class="flex flex-col items-center border-x border-white/10">
+                        <span class="text-[11px] text-white/50 font-bold mb-1">تذاكر Elite</span>
+                        <span id="ui-ticket-elite" class="text-lg font-black text-purple-400">0</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-[11px] text-white/50 font-bold mb-1">تذاكر Mythic</span>
+                        <span id="ui-ticket-mythic" class="text-lg font-black text-yellow-400">0</span>
+                    </div>
+                </div>
+
+                <!-- Chests Section -->
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="gift" class="w-5 h-5 text-yellow-400"></i> صناديق الحظ الملحمية
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="ui-chests-container">
+                        <!-- Chest 1: Scholar Cache -->
+                        <div class="glass-panel p-5 rounded-2xl border border-blue-500/20 flex flex-col justify-between">
+                            <div>
+                                <div class="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-3 mx-auto">
+                                    <i data-lucide="box" class="w-7 h-7"></i>
+                                </div>
+                                <h4 class="text-base font-black text-white text-center mb-1">Scholar Cache</h4>
+                                <p class="text-xs text-white/60 text-center mb-4">70% شائِع / 25% نادر / 5% ملحمي</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="openChest('scholar', true)" class="w-full py-2.5 min-h-[56px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 btn-press">
+                                    استخدم التذكرة (<span id="ui-scholar-ticket-count">0</span>)
+                                </button>
+                                <button onclick="openChest('scholar', false)" class="w-full py-2.5 min-h-[56px] rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-bold text-xs flex items-center justify-center gap-2 btn-press">
+                                    فتح بـ 400 عملة <i data-lucide="coins" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chest 2: Elite Crate -->
+                        <div class="glass-panel p-5 rounded-2xl border border-purple-500/20 flex flex-col justify-between">
+                            <div>
+                                <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-3 mx-auto">
+                                    <i data-lucide="gift" class="w-7 h-7"></i>
+                                </div>
+                                <h4 class="text-base font-black text-white text-center mb-1">Elite Crate</h4>
+                                <p class="text-xs text-white/60 text-center mb-4">65% نادر / 30% ملحمي / 5% أسطوري (شفقة مفعلة)</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="openChest('elite', true)" class="w-full py-2.5 min-h-[56px] rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-2 btn-press">
+                                    استخدم التذكرة (<span id="ui-elite-ticket-count">0</span>)
+                                </button>
+                                <button onclick="openChest('elite', false)" class="w-full py-2.5 min-h-[56px] rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-bold text-xs flex items-center justify-center gap-2 btn-press">
+                                    فتح بـ 1200 عملة <i data-lucide="coins" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chest 3: Mythic Vault -->
+                        <div class="glass-panel p-5 rounded-2xl border border-yellow-500/20 flex flex-col justify-between">
+                            <div>
+                                <div class="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-400 mb-3 mx-auto">
+                                    <i data-lucide="crown" class="w-7 h-7"></i>
+                                </div>
+                                <h4 class="text-base font-black text-white text-center mb-1">Mythic Vault</h4>
+                                <p class="text-xs text-white/60 text-center mb-4">70% ملحمي / 25% أسطوري / 5% خرافي (شفقة مفعلة)</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="openChest('mythic', true)" class="w-full py-2.5 min-h-[56px] rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-xs flex items-center justify-center gap-2 btn-press">
+                                    استخدم التذكرة (<span id="ui-mythic-ticket-count">0</span>)
+                                </button>
+                                <button onclick="openChest('mythic', false)" class="w-full py-2.5 min-h-[56px] rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-bold text-xs flex items-center justify-center gap-2 btn-press">
+                                    فتح بـ 4000 عملة <i data-lucide="coins" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wheel Section -->
+                <div class="glass-panel rounded-2xl p-6 border border-indigo-500/20 flex flex-col items-center text-center">
+                    <div class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-3">
+                        <i data-lucide="disc" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-lg font-black text-white mb-1">عجلة الحظ الكبرى</h3>
+                    <p class="text-xs text-white/60 mb-4">رموز العجلة المتاحة: <span id="ui-wheel-tokens" class="text-yellow-400 font-bold">0</span></p>
+                    <button onclick="spinWheel()" class="px-8 py-3 min-h-[56px] rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm btn-press shadow-lg flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i> تدوير العجلة (1 رمز)
+                    </button>
+                </div>
+
+                <!-- Shard Shop & Endgame Section -->
+                <div class="glass-panel rounded-2xl p-6 border border-emerald-500/20">
+                    <h3 class="text-lg font-black text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="gem" class="w-5 h-5 text-emerald-400"></i> متجر الشظايا واستبدالها (Shard Shop)
+                    </h3>
+                    <p class="text-xs text-white/60 mb-4">استبدل شظاياك مقابل عملات ذهبية مباشرة، أو اجمع 100 شظية لتحويلها إلى رمز عجلة الحظ.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] text-blue-400 font-bold block mb-1">شظايا نادرة</span>
+                                <span id="ui-shard-rare" class="text-lg font-black text-white mb-1 block">0</span>
+                                <span class="text-[10px] text-white/50 block mb-2">= 50 عملة</span>
+                            </div>
+                            <button onclick="redeemShard('rare')" class="w-full py-1.5 min-h-[44px] rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold text-xs btn-press">استبدال (1)</button>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] text-purple-400 font-bold block mb-1">شظايا ملحمية</span>
+                                <span id="ui-shard-epic" class="text-lg font-black text-white mb-1 block">0</span>
+                                <span class="text-[10px] text-white/50 block mb-2">= 100 عملة</span>
+                            </div>
+                            <button onclick="redeemShard('epic')" class="w-full py-1.5 min-h-[44px] rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold text-xs btn-press">استبدال (1)</button>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] text-yellow-400 font-bold block mb-1">شظايا أسطورية</span>
+                                <span id="ui-shard-legendary" class="text-lg font-black text-white mb-1 block">0</span>
+                                <span class="text-[10px] text-white/50 block mb-2">= 250 عملة</span>
+                            </div>
+                            <button onclick="redeemShard('legendary')" class="w-full py-1.5 min-h-[44px] rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-bold text-xs btn-press">استبدال (1)</button>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] text-red-400 font-bold block mb-1">شظايا خرافية</span>
+                                <span id="ui-shard-mythic" class="text-lg font-black text-white mb-1 block">0</span>
+                                <span class="text-[10px] text-white/50 block mb-2">= 500 عملة</span>
+                            </div>
+                            <button onclick="redeemShard('mythic')" class="w-full py-1.5 min-h-[44px] rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold text-xs btn-press">استبدال (1)</button>
+                        </div>
+                    </div>
+                    <button onclick="convertShardsToWheelToken()" class="w-full py-3 min-h-[56px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm btn-press flex items-center justify-center gap-2 shadow-lg">
+                        <i data-lucide="repeat" class="w-5 h-5"></i> تحويل 100 شظية إلى رمز عجلة (Wheel Token)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inventory View -->
+            <div id="ui-store-inventory-view" class="hidden w-full flex-col gap-4">
+                <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="backpack" class="w-5 h-5 text-emerald-400"></i> خزانة المقتنيات
+                </h3>
+                <div id="ui-inventory-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                    <!-- Owned consumables injected here -->
+                </div>
+                <!-- Empty State for Inventory -->
+                <div id="ui-inventory-empty" class="hidden glass-panel rounded-2xl p-6 text-center opacity-50 border-dashed border-2 border-white/10 w-full">
+                    <i data-lucide="package-open" class="w-8 h-8 text-white/30 mx-auto mb-2"></i>
+                    <p class="text-sm text-white/70">الخزانة فارغة حالياً. قم بشراء معززات أو قدرات من المتجر.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-stats" class="view-section space-y-6 pb-10">
+            <!-- Academic Direction -->
+            <section class="rodo-academic-suite" aria-labelledby="rodo-academic-suite-title">
+                <div class="rodo-academic-heading">
+                    <div>
+                        <p class="rodo-eyebrow">YOUR ACADEMIC PATH</p>
+                        <h2 id="rodo-academic-suite-title">مسارك الدراسي</h2>
+                        <p>نظرة هادئة على مكانك الآن، واتجاهك، والمحطة التي تقترب منها.</p>
+                    </div>
+                    <div class="rodo-academic-heading-mark" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+
+                <div class="rodo-academic-hero-grid">
+                    <div id="ui-where-am-i-going"></div>
+                    <div id="ui-progress-story"></div>
+                </div>
+
+                <div class="rodo-academic-lower-grid">
+                    <div id="ui-academic-milestones"></div>
+                    <div id="ui-study-calendar"></div>
+                </div>
+            </section>
+
+            <!-- Performance Overview & XP -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <div class="glass-panel rounded-[2rem] p-6 relative overflow-hidden shadow-xl flex flex-col justify-center items-center text-center">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/20 rounded-full blur-[50px] pointer-events-none"></div>
+                    <h3 class="text-sm font-bold text-white/70 mb-2">مؤشر الأداء العام</h3>
+                    <div class="flex items-end gap-2">
+                        <span id="stat-performance-score" class="text-5xl font-black text-white tracking-tighter">0</span>
+                        <span class="text-lg font-bold text-white/50 mb-1">/ 100</span>
+                    </div>
+                    <div id="stat-performance-compare" class="mt-3 text-xs font-bold px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/10">
+                        جاري الحساب...
+                    </div>
+                </div>
+                <div class="glass-panel rounded-[2rem] p-6 relative overflow-hidden shadow-xl flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-white/70 mb-4 flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-yellow-400"></i> مستوى التطور
+                    </h3>
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <span class="text-2xl font-black text-white" id="stat-current-level">Lvl 1</span>
+                        </div>
+                        <span class="text-xs font-bold text-yellow-400" id="stat-xp-progress-text">0 / 100 XP</span>
+                    </div>
+                    <div class="w-full bg-black/40 h-3 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                        <div id="stat-xp-progress-bar" class="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="glass-panel rounded-[2rem] p-6 w-full shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i> ملخص النشاط
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">جلسات اليوم</span>
+                        <span id="stat-today-sessions" class="text-xl font-black text-emerald-400">0</span>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">جلسات الأسبوع</span>
+                        <span id="stat-weekly-sessions" class="text-xl font-black text-blue-400">0</span>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">جلسات الشهر</span>
+                        <span id="stat-monthly-sessions" class="text-xl font-black text-purple-400">0</span>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">متوسط الجلسة</span>
+                        <span id="stat-avg-duration" class="text-xl font-black text-orange-400">0 د</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Activity & Study Distribution -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                <div class="glass-panel rounded-[2rem] p-6 shadow-xl w-full">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-400"></i> نشاط آخر 7 أيام
+                    </h3>
+                    <div class="w-full p-4 bg-[#0A0A0C] rounded-2xl border border-white/10 shadow-inner overflow-x-auto hide-scrollbar">
+                        <div id="stat-weekly-activity-chart" class="w-full min-w-[320px] max-w-lg mx-auto"></div>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-[2rem] p-6 shadow-xl w-full">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-400"></i> توزيع المذاكرة
+                    </h3>
+                    <div id="stat-study-distribution" class="w-full flex flex-col gap-3"></div>
+                </div>
+            </div>
+
+            <!-- Focus Analytics & Personal Records -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                <div class="glass-panel rounded-[2rem] p-6 shadow-xl w-full">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="focus" class="w-5 h-5 text-orange-400"></i> تحليلات التركيز
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs font-bold text-white/60">أفضل وقت للمذاكرة</span>
+                            <span id="stat-best-time" class="text-sm font-black text-white">--</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs font-bold text-white/60">متوسط طول الجلسة</span>
+                            <span id="stat-focus-avg-len" class="text-sm font-black text-white">0 د</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs font-bold text-white/60">أطول جلسة تركيز</span>
+                            <span id="stat-longest-session" class="text-sm font-black text-orange-400">0 د</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-[2rem] p-6 shadow-xl w-full">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="award" class="w-5 h-5 text-yellow-400"></i> أرقام قياسية
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs font-bold text-white/60">أطول سلسلة أيام</span>
+                            <span id="stat-best-streak" class="text-sm font-black text-yellow-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs font-bold text-white/60">أكثر جلسات في يوم</span>
+                            <span id="stat-most-sessions-day" class="text-sm font-black text-white">0</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs font-bold text-white/60">أطول يوم دراسي</span>
+                            <span id="stat-longest-day" class="text-sm font-black text-white">0 د</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Insights -->
+            <div class="glass-panel rounded-[2rem] p-6 shadow-xl w-full relative overflow-hidden">
+                <div class="absolute left-0 top-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-purple-400"></i> ملاحظات ذكية
+                </h3>
+                <div id="stat-smart-insights" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"></div>
+            </div>
+
+            <!-- Error Analytics Panel -->
+            <div class="glass-panel rounded-[2rem] p-6 shadow-xl w-full relative overflow-hidden mt-8 border-rose-500/10 bg-gradient-to-br from-rose-500/[0.02] to-transparent">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-rose-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-6 relative z-10">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="microscope" class="w-5 h-5 text-rose-400"></i> تحليلات بنك الأخطاء
+                    </h3>
+                    <button id="btn-nav-to-error-bank" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center gap-1 btn-press">
+                        الذهاب للبنك <i data-lucide="arrow-left" class="w-3 h-3"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 relative z-10">
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">إجمالي الأخطاء</span>
+                        <span id="stat-errors-total" class="text-xl font-black text-white">0</span>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">تحتاج مراجعة</span>
+                        <span id="stat-errors-review" class="text-xl font-black text-rose-400">0</span>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">أخطاء متكررة</span>
+                        <span id="stat-errors-repeated" class="text-xl font-black text-orange-400">0</span>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-white/50 font-bold mb-1">تم إتقانها</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="stat-errors-mastered" class="text-xl font-black text-emerald-400">0</span>
+                            <span id="stat-errors-mastery" class="text-xs font-bold text-emerald-400/50">(0%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
+                    <div>
+                        <h4 class="text-xs font-bold text-white/60 mb-3">توزيع أنواع الأخطاء</h4>
+                        <div id="stat-errors-type-distribution" class="space-y-2">
+                            <!-- JS will inject distribution bars here -->
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-white/60 mb-3">المواد الأكثر تسجيلاً للأخطاء</h4>
+                        <div id="stat-errors-subject-distribution" class="space-y-2">
+                            <!-- JS will inject subject distribution here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-white/5 relative z-10">
+                    <h4 class="text-xs font-bold text-white/60 mb-3 flex items-center gap-1">
+                        <i data-lucide="lightbulb" class="w-3 h-3 text-yellow-400"></i> استنتاجات مبنية على الأدلة
+                    </h4>
+                    <div id="stat-errors-insights" class="space-y-2">
+                        <!-- JS will inject insights here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marathon Map (Preserved) -->
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl mt-4 w-full">
+                <h3 class="text-xl font-bold mb-2 text-white">خريطة الماراثون</h3>
+                <p class="text-xs text-white/60 mb-5 leading-relaxed">تقدمك الأسبوعي نحو القمة.</p>
+                <button onclick="confirmAdvanceWeek()" id="btn-advance-week" class="w-full py-3.5 min-h-[44px] bg-white hover:bg-gray-200 text-black rounded-xl font-bold text-sm btn-press transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    <span>إنهاء الأسبوع واستلام 200 XP وعملة</span>
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
+                <div id="ui-timeline" class="mt-6 px-2 w-full overflow-hidden"></div>
+            </div>
+
+            <!-- Weekly Reports Archive (Preserved) -->
+            <div class="glass-panel rounded-[2rem] p-6 mt-6 relative overflow-hidden w-full">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <i data-lucide="archive" class="w-5 h-5 text-purple-400"></i> أرشيف التقارير الأسبوعية
+                </h3>
+                <p class="text-xs text-white/50 mb-6">سجل إنجازاتك السابقة محفوظ هنا، لتتذكر كم تطورت.</p>
+                <div id="ui-weekly-history" class="space-y-3 w-full"></div>
+            </div>
+        </section>
+
+        <section id="view-profile" class="view-section space-y-6 pb-10">
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl w-full">
+                <h2 class="text-xl font-black mb-1 text-white">بطاقة الطالب</h2>
+                <p class="text-sm text-white/50 mb-6">تتطور هويتك البصرية تلقائياً كلما ارتفع مستواك.</p>
+                
+                <div class="mb-6 relative max-w-xs mx-auto w-full">
+                    <label for="ui-profile-name" class="absolute -top-2.5 right-4 bg-[#111112] px-2 text-[10px] font-bold text-blue-400 rounded-md">اسم البطل</label>
+                    <input type="text" id="ui-profile-name" onchange="updateUserName(this.value)" placeholder="اكتب اسمك هنا..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-base min-h-[44px] text-white font-bold text-center focus:outline-none focus:border-blue-500 transition-colors shadow-inner">
+                </div>
+
+                <div class="text-right mb-3 mt-8 w-full">
+                    <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4 text-blue-400"></i> تشكيلة الأبطال
+                    </h3>
+                    <p class="text-[10px] text-white/40">اختر الأفاتار الأساسي الخاص بك.</p>
+                </div>
+                
+                <div id="ui-avatar-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 w-full"></div>
+            </div>
+
+            <div class="glass-panel rounded-[2rem] p-6 w-full">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="trophy" class="w-5 h-5 text-yellow-400"></i> خزانة الأوسمة والإنجازات
+                </h3>
+                <p class="text-xs text-white/50 mb-5 leading-relaxed">الأوسمة التي حصدتها من خلال عملك الجاد ومثابرتك. كل وسام يعطيك مكافآت خارقة!</p>
+                
+                <div id="ui-achievements-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"></div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="glass-panel rounded-2xl p-5 border border-blue-500/20 bg-blue-500/5 mt-8 w-full">
+                <h3 class="text-blue-400 font-bold text-sm mb-2 flex items-center gap-2">
+                    <i data-lucide="database" class="w-5 h-5"></i> إدارة البيانات
+                </h3>
+                <p class="text-xs text-white/50 mb-4">حفظ نسخة احتياطية من بياناتك أو استعادتها لضمان عدم ضياع مجهودك.</p>
+                <div class="flex gap-3 w-full">
+                    <button onclick="exportData()" class="flex-1 py-3 min-h-[44px] bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-xl text-xs font-bold btn-press transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> تصدير (Backup)
+                    </button>
+                    <button onclick="triggerImport()" class="flex-1 py-3 min-h-[44px] bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 rounded-xl text-xs font-bold btn-press transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="upload" class="w-4 h-4"></i> استيراد
+                    </button>
+                    <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="handleImportFile(event)">
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="glass-panel rounded-2xl p-5 border border-red-500/20 bg-red-500/5 mt-4 w-full">
+                <h3 class="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> منطقة الخطر
+                </h3>
+                <p class="text-xs text-white/50 mb-4">مسح جميع بياناتك، مهامك، ومستواك والبدء من الصفر.</p>
+                <button onclick="requestReset()" id="btn-reset-data" class="w-full py-3 min-h-[44px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-sm font-bold btn-press transition-all">
+                    إعادة تهيئة البيانات (Reset)
+                </button>
+            </div>
+
+            <div class="flex flex-col items-center justify-center mt-6 space-y-3 w-full">
+                <p class="text-xs text-white/50">تواصل معنا</p>
+                <div class="flex items-center gap-3">
+                    <a href="https://www.instagram.com/rodo.io/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center min-h-[44px] min-w-[44px] gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all text-xs font-bold">
+                        <i data-lucide="instagram" class="w-5 h-5"></i> Rodo App
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-schedule" class="view-section space-y-6 pb-10">
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl mb-4 relative overflow-hidden w-full">
+                <div class="absolute left-0 top-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[50px] pointer-events-none" id="schedule-glow"></div>
+                <h2 class="text-2xl font-black mb-2 text-white flex items-center justify-center gap-2">
+                    <i data-lucide="calendar-days" id="schedule-header-icon" class="w-6 h-6 text-emerald-400"></i> <span id="schedule-header-title">الجدول الأسبوعي</span>
+                </h2>
+                <p class="text-sm text-white/60 mb-5">نظم دروسك وخطط مذاكرتك اليومية لتجنب التشتت.</p>
+                
+                <div class="flex bg-black/40 p-1.5 rounded-xl border border-white/10 relative z-10 gap-1 w-full">
+                    <button onclick="setScheduleTab('lessons')" id="tab-lessons" class="flex-1 py-2 min-h-[44px] text-sm font-bold rounded-lg transition-all bg-emerald-500 text-white shadow-md">دروس ومواعيد</button>
+                    <button onclick="setScheduleTab('study')" id="tab-study" class="flex-1 py-2 min-h-[44px] text-sm font-bold rounded-lg transition-all text-white/50 hover:text-white">خطة المذاكرة</button>
+                </div>
+            </div>
+
+            <div class="flex overflow-x-auto hide-scrollbar gap-2 pb-2 mb-2 w-full" id="ui-schedule-days"></div>
+
+            <form onsubmit="addScheduleItem(event)" class="glass-panel rounded-2xl p-3 flex flex-wrap sm:flex-nowrap gap-2 shadow-lg mb-4 bg-white/5 w-full">
+                <input type="text" id="new-schedule-title" placeholder="اسم المادة..." aria-label="اسم المادة" required class="flex-1 w-full min-w-[150px] bg-black/40 rounded-xl border border-white/10 text-white px-3 text-base min-h-[44px] focus:outline-none transition-colors placeholder-white/30 font-medium">
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <input type="text" id="new-schedule-time" placeholder="الوقت (مثال: 4 م)" aria-label="وقت المادة" class="flex-1 sm:w-24 bg-black/40 rounded-xl border border-white/10 text-white px-3 text-base min-h-[44px] focus:outline-none transition-colors placeholder-white/30 font-medium text-center min-w-0">
+                    <input type="date" id="new-schedule-payment-date" aria-label="تاريخ أول دفعة (اختياري)" class="flex-1 sm:w-32 bg-black/40 rounded-xl border border-white/10 text-white px-2 text-sm min-h-[44px] focus:outline-none transition-colors placeholder-white/30 font-medium text-center min-w-0 text-white/70" title="تاريخ أول دفعة (اختياري)">
+                    <button type="submit" id="btn-add-schedule" aria-label="إضافة للجدول" class="w-11 h-11 min-w-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div id="ui-schedule-items" class="flex flex-col gap-3 pb-8 w-full"></div>
+        </section>
+
+        <section id="view-exams" class="view-section space-y-6 pb-10">
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl mb-4 relative overflow-hidden w-full">
+                <div class="absolute right-0 top-0 w-40 h-40 bg-indigo-500/15 rounded-full blur-[60px] pointer-events-none"></div>
+                <h2 class="text-2xl font-black mb-2 text-white flex items-center justify-center gap-2">
+                    <i data-lucide="book-open" class="w-6 h-6 text-indigo-400"></i> نتائج الامتحانات
+                </h2>
+                <p class="text-sm text-white/60">تابع تقدمك الأكاديمي وحلل أدائك في كل مادة بتفصيل.</p>
+            </div>
+
+            <div id="ui-exam-projection" class="w-full"></div>
+
+            <form onsubmit="addExamSubject(event)" class="glass-panel rounded-2xl p-4 shadow-lg mb-4 bg-indigo-500/[0.02] border border-indigo-500/15 w-full">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-white">إضافة مادة جديدة</h3>
+                </div>
+                <div class="flex gap-2 w-full flex-wrap sm:flex-nowrap">
+                    <input type="text" id="new-subject-name" aria-label="اسم المادة" placeholder="اسم المادة (مثال: الفيزياء)" required class="flex-1 w-full bg-black/40 rounded-xl border border-white/10 text-white px-3 text-base min-h-[44px] focus:outline-none transition-colors placeholder-white/30 font-medium">
+                    <button type="submit" class="w-full sm:w-auto px-4 py-2 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(99,102,241,0.3)] font-bold text-sm gap-1">
+                        <i data-lucide="plus" class="w-5 h-5"></i> أضف المادة
+                    </button>
+                </div>
+            </form>
+
+            <div id="ui-exams-subjects-container" class="space-y-4 pb-8 w-full"></div>
+        </section>
+
+        <section id="view-weaknesses" class="view-section space-y-6 pb-10">
+            <!-- Header -->
+            <div class="glass-panel rounded-[2rem] p-6 text-center shadow-xl mb-4 relative overflow-hidden w-full">
+                <div class="absolute left-0 top-0 w-40 h-40 bg-rose-500/15 rounded-full blur-[60px] pointer-events-none"></div>
+                <h2 class="text-2xl font-black mb-2 text-white flex items-center justify-center gap-2">
+                    <i data-lucide="shield-alert" class="w-6 h-6 text-rose-400"></i> بنك الأخطاء
+                </h2>
+                <p class="text-sm text-white/60 mb-4">واجه نقاط ضعفك وحولها إلى مراكز قوة. سجل أخطاءك، راجعها، وتعلم منها.</p>
+                <div class="flex flex-wrap justify-center gap-3 relative z-10">
+                    <div class="bg-black/40 px-4 py-2 rounded-xl border border-white/10 flex items-center gap-2">
+                        <span class="text-xs text-white/50 font-bold">إجمالي الأخطاء:</span>
+                        <span id="error-bank-total" class="text-sm font-black text-rose-400">0</span>
+                    </div>
+                    <button id="btn-smart-review" class="px-4 py-2 min-h-[44px] rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 font-bold text-sm flex items-center gap-2 transition-all btn-press">
+                        <i data-lucide="brain" class="w-4 h-4"></i> مراجعة ذكية
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Error UI (Inline Form) -->
+            <form id="form-add-error" class="glass-panel rounded-2xl p-4 shadow-lg mb-4 bg-rose-500/[0.02] border border-rose-500/15 w-full">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 border border-rose-500/20">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-white">تسجيل خطأ جديد</h3>
+                    </div>
+                </div>
+                <div class="space-y-3 w-full">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="new-error-subject" aria-label="المادة أو المجال" placeholder="المادة (مثال: فيزياء)" required class="flex-1 bg-black/40 rounded-xl border border-white/10 text-white px-4 text-base min-h-[44px] focus:outline-none focus:border-rose-500/50 transition-all placeholder-white/20 font-medium">
+                        <div class="flex gap-2 flex-1">
+                            <label class="sr-only">مستوى الخطورة</label>
+                            <select id="new-error-severity" class="w-full bg-black/40 rounded-xl border border-white/10 text-white px-4 text-base min-h-[44px] focus:outline-none focus:border-rose-500/50 transition-all font-medium appearance-none">
+                                <option value="low">بسيطة</option>
+                                <option value="medium" selected>متوسطة</option>
+                                <option value="high">مهمة 🔥</option>
+                            </select>
+                        </div>
+                    </div>
+                    <textarea id="new-error-text" aria-label="وصف الخطأ" placeholder="ما هو الخطأ الذي وقعت فيه؟" required class="w-full bg-black/40 rounded-xl border border-white/10 text-white px-4 py-3 text-base min-h-[80px] focus:outline-none focus:border-rose-500/50 transition-all placeholder-white/20 font-medium"></textarea>
+                    
+                    <!-- Advanced Fields Toggle Container -->
+                    <div id="new-error-advanced-fields" class="space-y-3 pt-2 border-t border-white/5">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <select id="new-error-type" class="flex-1 bg-black/40 rounded-xl border border-white/10 text-white px-4 text-base min-h-[44px] focus:outline-none focus:border-rose-500/50 transition-all font-medium appearance-none">
+                                <option value="other" selected>نوع الخطأ (أخرى)</option>
+                                <option value="conceptual">خطأ مفاهيمي</option>
+                                <option value="calculation">خطأ حسابي</option>
+                                <option value="careless">قلة تركيز</option>
+                            </select>
+                        </div>
+                        <textarea id="new-error-lesson" aria-label="الدرس المستفاد" placeholder="الدرس المستفاد / التصحيح (اختياري الآن)" class="w-full bg-black/40 rounded-xl border border-white/10 text-white px-4 py-3 text-base min-h-[60px] focus:outline-none focus:border-rose-500/50 transition-all placeholder-white/20 font-medium"></textarea>
+                    </div>
+
+                    <button type="submit" id="btn-add-error" class="w-full py-3 min-h-[44px] rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center btn-press transition-all shadow-[0_0_20px_rgba(225,29,72,0.3)] font-bold text-sm gap-2 mt-2">
+                        <i data-lucide="target" class="w-5 h-5"></i> إضافة الخطأ
+                    </button>
+                </div>
+            </form>
+
+            <!-- Filters & Search -->
+            <div class="space-y-3 w-full">
+                <!-- Search -->
+                <div class="relative w-full">
+                    <input type="text" id="error-search" placeholder="ابحث في الأخطاء والدروس المستفادة..." class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-base min-h-[44px] text-white font-medium focus:outline-none focus:border-rose-500/50 transition-colors shadow-inner placeholder-white/30 pl-10">
+                    <i data-lucide="search" class="w-5 h-5 text-white/40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+                
+                <!-- Subject Pills -->
+                <div id="error-subject-filters" class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 w-full flex-nowrap">
+                    <!-- JS will inject pills here -->
+                </div>
+
+                <!-- Status Filters -->
+                <div id="error-status-filters" class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 w-full flex-nowrap">
+                    <!-- JS will inject status filters here -->
+                </div>
+            </div>
+
+            <!-- Error List -->
+            <div class="w-full relative min-h-[200px]">
+                <!-- Empty State: No Errors -->
+                <div id="error-empty-state" class="hidden glass-panel rounded-3xl p-12 text-center opacity-70 border-dashed border-2 border-white/10">
+                    <i data-lucide="shield-check" class="w-12 h-12 text-white/20 mx-auto mb-4"></i>
+                    <p class="text-sm text-white/50 font-bold mb-1">لا توجد أخطاء مسجلة</p>
+                    <p class="text-xs text-white/40">ابدأ بتسجيل أول خطأ عشان RODO يساعدك متكرروش.</p>
+                </div>
+
+                <!-- Empty State: No Results -->
+                <div id="error-no-results" class="hidden glass-panel rounded-3xl p-12 text-center opacity-70 border-dashed border-2 border-white/10">
+                    <i data-lucide="search-x" class="w-12 h-12 text-white/20 mx-auto mb-4"></i>
+                    <p class="text-sm text-white/50 font-bold">مفيش أخطاء مطابقة للبحث أو الفلتر</p>
+                </div>
+
+                <!-- List Container -->
+                <div id="error-list-container" class="space-y-3 w-full">
+                    <!-- JS will inject compact error cards here -->
+                </div>
+
+                <!-- Load More -->
+                <div class="mt-4 text-center">
+                    <button id="error-load-more" class="hidden px-6 py-2 min-h-[44px] rounded-xl bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white font-bold text-sm transition-all btn-press mx-auto">
+                        تحميل المزيد
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Save Session -->
+    <div id="modal-save-session" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-md max-h-[90dvh] overflow-y-auto p-6 relative transform scale-95 opacity-0 transition-all duration-300 shadow-[0_0_40px_rgba(10,132,255,0.15)] border-blue-500/20" id="modal-save-session-content">
+            <div class="text-center mb-6 mt-4">
+                <div class="w-16 h-16 rounded-full bg-blue-500/20 mx-auto flex items-center justify-center shadow-lg mb-3 border border-blue-500/30">
+                    <i data-lucide="timer" class="w-8 h-8 text-blue-400"></i>
+                </div>
+                <h2 class="text-xl font-black text-white">حفظ الجلسة</h2>
+                <p class="text-sm text-blue-400 font-bold mt-1" id="modal-save-duration">00:00:00</p>
+                <p class="text-xs text-white/50 mt-2">اختر المادة لإضافة الوقت إليها</p>
+            </div>
+            
+            <div id="modal-subject-list" class="max-h-60 overflow-y-auto hide-scrollbar space-y-2 mb-4 w-full"></div>
+            
+            <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full">
+                <input type="text" id="new-study-subject-input" aria-label="إضافة مادة جديدة" placeholder="إضافة مادة جديدة (مثال: فيزياء)" class="flex-1 w-full bg-black/40 rounded-xl border border-white/10 text-white px-3 text-base min-h-[44px] focus:outline-none placeholder-white/30 font-medium">
+                <button onclick="addStudySubjectFromModal()" aria-label="إضافة مادة دراسية" class="w-full sm:w-11 h-11 min-h-[44px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center btn-press shrink-0 transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <button onclick="closeSaveSessionModal()" aria-label="إغلاق النافذة" class="absolute top-4 left-4 p-2 w-11 h-11 flex items-center justify-center text-white/40 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Daily Recap -->
+    <div id="modal-daily-recap" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-sm max-h-[90dvh] overflow-y-auto p-8 text-center relative transform scale-95 opacity-0 transition-all duration-300 shadow-[0_0_40px_rgba(10,132,255,0.15)] border-blue-500/20" id="modal-daily-recap-content">
+            <div class="absolute -top-20 -left-20 w-40 h-40 bg-blue-500/20 rounded-full blur-[50px] pointer-events-none"></div>
+            <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-purple-500/20 rounded-full blur-[50px] pointer-events-none"></div>
+            
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 mx-auto flex items-center justify-center shadow-lg mb-5 border border-white/20 relative z-10">
+                <i data-lucide="sun" class="w-8 h-8 text-white"></i>
+            </div>
+            <h2 class="text-2xl font-black text-white mb-2 tracking-tight relative z-10">صباح البدايات المشرقة!</h2>
+            <p class="text-sm text-white/60 mb-6 leading-relaxed relative z-10">دعنا نلقي نظرة سريعة على ما حققته بالأمس لتبدأ يومك بحماس وتكمل الأسطورة.</p>
+            
+            <div class="grid grid-cols-2 gap-3 mb-8 relative z-10 w-full">
+                <div class="bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center">
+                    <span class="text-blue-400 text-2xl font-black tabular-nums" id="recap-tasks">0</span>
+                    <span class="text-xs text-white/50 font-bold mt-1">مهام أُنجزت</span>
+                </div>
+                <div class="bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center">
+                    <span class="text-yellow-400 text-2xl font-black tabular-nums" id="recap-xp">0</span>
+                    <span class="text-xs text-white/50 font-bold mt-1">نقطة خبرة (XP)</span>
+                </div>
+                <div class="col-span-2 bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-emerald-500/5"></div>
+                    <span class="text-emerald-400 text-2xl font-black tabular-nums relative z-10" id="recap-focus">0</span>
+                    <span class="text-xs text-white/50 font-bold mt-1 relative z-10">دقيقة تركيز صافي</span>
+                </div>
+            </div>
+
+            <button onclick="closeDailyRecap()" class="w-full py-4 min-h-[44px] rounded-xl bg-white text-black font-black text-sm btn-press transition-all hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)] relative z-10">
+                استمر في التألق اليوم! 🔥
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Weekly Report -->
+    <div id="modal-weekly-report" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-md max-h-[90dvh] overflow-y-auto p-8 text-center relative transform scale-95 opacity-0 transition-all duration-300 shadow-[0_0_50px_rgba(168,85,247,0.2)] border-purple-500/30" id="modal-weekly-report-content">
+            <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-purple-500/30 rounded-full blur-[60px] pointer-events-none"></div>
+            
+            <div class="relative z-10 mt-4 w-full">
+                <i data-lucide="award" class="w-14 h-14 text-purple-400 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"></i>
+                <h2 class="text-2xl font-black text-white mb-1">حصاد الأسبوع <span id="report-week-num" class="text-purple-400"></span></h2>
+                <p class="text-xs text-white/50 mb-6">أسبوع آخر من العمل الشاق ينتهي، وهذه هي ثمار جهدك.</p>
+                
+                <div class="bg-black/50 border border-white/5 rounded-2xl p-5 mb-6 text-right space-y-4 w-full">
+                    <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                        <span class="text-sm font-bold text-white/70">إجمالي المهام المنجزة</span>
+                        <span class="text-lg font-black text-blue-400" id="report-tasks">0</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                        <span class="text-sm font-bold text-white/70">الخبرة المكتسبة (XP)</span>
+                        <span class="text-lg font-black text-yellow-400" id="report-xp">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold text-white/70">وقت التركيز العميق</span>
+                        <span class="text-lg font-black text-emerald-400"><span id="report-focus">0</span> دقيقة</span>
+                    </div>
+                </div>
+
+                <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 mb-8 w-full">
+                    <p class="text-sm text-purple-300 font-bold mb-1">المكافأة الأسبوعية:</p>
+                    <p class="text-white font-black text-lg">+200 XP & 200 عملة ذهبية 🪙</p>
+                </div>
+
+                <div class="flex gap-3 w-full">
+                    <button onclick="undoAdvanceWeek()" class="w-1/3 py-4 min-h-[44px] rounded-xl bg-white/5 border border-white/10 text-white/70 font-bold text-sm btn-press transition-all hover:bg-white/10 hover:text-white flex items-center justify-center gap-2">
+                        <i data-lucide="undo-2" class="w-5 h-5"></i> تراجع
+                    </button>
+                    <button onclick="closeWeeklyReport()" class="w-2/3 py-4 min-h-[44px] rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-sm btn-press transition-all hover:opacity-90 shadow-[0_0_20px_rgba(147,51,234,0.4)] flex items-center justify-center gap-2">
+                        استمرار <i data-lucide="rocket" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Random Event -->
+    <div id="modal-random-event" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[250] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-500 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-sm max-h-[90dvh] overflow-y-auto p-8 text-center relative transform scale-95 opacity-0 transition-all duration-500 shadow-2xl" id="modal-random-event-content">
+            <div id="event-glow-bg" class="absolute -top-24 left-1/2 -translate-x-1/2 w-56 h-56 rounded-full blur-[60px] pointer-events-none transition-colors duration-1000"></div>
+            
+            <div class="relative z-10 flex flex-col items-center mt-4 w-full">
+                <div id="event-icon-container" class="w-20 h-20 rounded-full mx-auto flex items-center justify-center shadow-2xl mb-5 border-2 anim-event-icon">
+                    <i id="event-icon" data-lucide="sparkles" class="w-10 h-10"></i>
+                </div>
+                
+                <h2 id="event-title" class="text-3xl font-black text-white mb-2 tracking-tight w-full"></h2>
+                <p id="event-desc" class="text-sm text-white/70 mb-8 leading-relaxed px-2 w-full"></p>
+                
+                <div id="event-rewards-box" class="w-full bg-black/50 border border-white/10 rounded-2xl p-4 mb-8 flex justify-center items-center gap-6">
+                </div>
+
+                <button onclick="closeRandomEvent()" id="btn-claim-event" class="w-full py-4 min-h-[44px] rounded-xl font-black text-sm btn-press transition-all shadow-lg flex items-center justify-center gap-2">
+                    استلام المكافأة <i data-lucide="party-popper" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Penalty -->
+    <div id="modal-penalty" class="fixed inset-0 bg-red-950/90 backdrop-blur-lg z-[300] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-500 w-full h-full">
+        <div class="bg-[#0A0A0C]/90 border border-red-500/50 rounded-[2rem] w-full max-w-[92vw] md:max-w-md max-h-[90dvh] overflow-y-auto p-8 text-center relative transform scale-95 opacity-0 transition-all duration-500 shadow-[0_0_80px_rgba(220,38,38,0.3)]" id="modal-penalty-content">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.2)_0%,transparent_70%)] pointer-events-none"></div>
+            
+            <div class="relative z-10 mt-4 w-full">
+                <div class="w-24 h-24 rounded-full bg-red-600/20 mx-auto flex items-center justify-center shadow-lg mb-4 border border-red-500/50 animate-pulse">
+                    <i data-lucide="siren" class="w-12 h-12 text-red-500"></i>
+                </div>
+                <h2 class="text-3xl font-black text-red-500 mb-2 tracking-tight">تراجع الأداء!</h2>
+                <p class="text-sm text-white/70 mb-6 leading-relaxed">لقد غبت عن مهامك لمدة <span id="penalty-days" class="text-white font-bold bg-white/10 px-2 py-0.5 rounded"></span>. الاستمرارية هي مفتاح النجاح، وقد فقدت جزءاً من تقدمك بسبب هذا الغياب!</p>
+                
+                <div class="bg-black/60 border border-red-500/20 rounded-2xl p-5 mb-8 text-right space-y-4 shadow-inner w-full">
+                    <h3 class="text-xs text-red-400 font-bold mb-2 text-center border-b border-red-500/20 pb-2">خسائر المعركة</h3>
+                    <div id="penalty-xp-box" class="flex justify-between items-center hidden">
+                        <span class="text-sm font-bold text-white/80">خبرة مفقودة (XP)</span>
+                        <span class="text-base font-black text-yellow-500" id="penalty-xp">-0</span>
+                    </div>
+                    <div id="penalty-coins-box" class="flex justify-between items-center hidden">
+                        <span class="text-sm font-bold text-white/80">ذهب مسروق</span>
+                        <span class="text-base font-black text-yellow-400" id="penalty-coins">-0</span>
+                    </div>
+                </div>
+
+                <button onclick="closePenaltyModal()" class="w-full py-4 min-h-[44px] rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-sm btn-press transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2">
+                    لن أستسلم! سأعوض ما فاتني <i data-lucide="swords" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Record Payment -->
+    <div id="modal-record-payment" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-sm max-h-[90dvh] overflow-y-auto p-6 relative transform scale-95 opacity-0 transition-all duration-300 shadow-[0_0_40px_rgba(16,185,129,0.15)] border-emerald-500/20" id="modal-record-payment-content">
+            <div class="text-center mb-6 mt-2">
+                <div class="w-16 h-16 rounded-full bg-emerald-500/20 mx-auto flex items-center justify-center shadow-lg mb-3 border border-emerald-500/30">
+                    <i data-lucide="calendar-check" class="w-8 h-8 text-emerald-400"></i>
+                </div>
+                <h2 class="text-xl font-black text-white">تسجيل الدفع</h2>
+                <p class="text-xs text-white/60 mt-2 leading-relaxed">متى قمت بدفع هذه المادة؟ سنقوم بحساب موعد الدفعة القادمة تلقائياً بناءً على هذا التاريخ.</p>
+            </div>
+            
+            <div class="mb-6">
+                <label for="record-payment-date" class="block text-xs font-bold text-white/50 mb-2 px-1">تاريخ الدفع الفعلي</label>
+                <input type="date" id="record-payment-date" class="w-full bg-black/40 rounded-xl border border-white/10 text-white px-4 text-base min-h-[44px] focus:outline-none focus:border-emerald-500/50 transition-colors placeholder-white/30 font-medium text-center">
+                <input type="hidden" id="record-payment-item-id">
+            </div>
+
+            <div class="flex gap-3 w-full">
+                <button onclick="closeRecordPaymentModal()" class="w-1/3 py-3 min-h-[44px] rounded-xl bg-white/5 border border-white/10 text-white/70 font-bold text-sm btn-press transition-all hover:bg-white/10 hover:text-white flex items-center justify-center">
+                    إلغاء
+                </button>
+                <button onclick="confirmRecordPayment()" class="w-2/3 py-3 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm btn-press transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2">
+                    تأكيد الدفع <i data-lucide="check" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Error Detail -->
+    <div id="modal-error-detail" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-lg max-h-[90dvh] overflow-y-auto p-6 relative transform scale-95 opacity-0 transition-all duration-300 shadow-[0_0_40px_rgba(225,29,72,0.15)] border-rose-500/20 flex flex-col">
+            
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2">
+                        <span id="detail-error-subject" class="text-sm font-black text-white bg-white/10 px-2 py-1 rounded-md">--</span>
+                        <span id="detail-error-status" class="text-[10px] font-bold px-2 py-1 rounded-md border">--</span>
+                    </div>
+                    <span id="detail-error-date" class="text-[10px] text-white/40 font-medium">--</span>
+                </div>
+                <button id="btn-close-error-detail" aria-label="إغلاق النافذة" class="w-10 h-10 flex items-center justify-center text-white/40 hover:text-white transition-colors bg-white/5 rounded-full">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="bg-black/40 rounded-xl p-4 border border-white/5 mb-4">
+                <h4 class="text-[10px] font-bold text-white/40 mb-2">وصف الخطأ</h4>
+                <p id="detail-error-text" class="text-sm text-white/90 leading-relaxed font-medium">--</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col">
+                    <span class="text-[10px] font-bold text-white/40 mb-1">نوع الخطأ</span>
+                    <span id="detail-error-type" class="text-xs font-bold text-white">--</span>
+                </div>
+                <div class="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col">
+                    <span class="text-[10px] font-bold text-white/40 mb-1">مستوى الخطورة</span>
+                    <span id="detail-error-severity" class="text-xs font-bold text-white">--</span>
+                </div>
+                <div class="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col">
+                    <span class="text-[10px] font-bold text-white/40 mb-1">مرات التكرار</span>
+                    <span id="detail-error-repetition" class="text-xs font-black text-orange-400">0</span>
+                </div>
+                <div class="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col">
+                    <span class="text-[10px] font-bold text-white/40 mb-1">آخر مراجعة</span>
+                    <span id="detail-error-last-review" class="text-xs font-bold text-white">--</span>
+                </div>
+            </div>
+
+            <div class="bg-black/40 rounded-xl p-4 border border-white/5 mb-6 flex-1">
+                <h4 class="text-[10px] font-bold text-white/40 mb-2">الدرس المستفاد / التصحيح</h4>
+                <p id="detail-error-lesson" class="text-sm text-emerald-400/90 leading-relaxed font-medium">--</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mt-auto">
+                <button id="btn-error-action-repeat" class="flex-1 py-3 min-h-[44px] rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 font-bold text-xs transition-all btn-press flex items-center justify-center gap-1">
+                    <i data-lucide="rotate-cw" class="w-4 h-4"></i> كررت الخطأ
+                </button>
+                <button id="btn-error-action-review" class="flex-1 py-3 min-h-[44px] rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 font-bold text-xs transition-all btn-press flex items-center justify-center gap-1">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> مراجعة / تعديل
+                </button>
+                <button id="btn-error-action-master" class="flex-1 py-3 min-h-[44px] rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 font-bold text-xs transition-all btn-press flex items-center justify-center gap-1">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> أتقنته
+                </button>
+                <button id="btn-error-action-delete" class="w-12 py-3 min-h-[44px] rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 font-bold text-xs transition-all btn-press flex items-center justify-center shrink-0">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Error Review / Edit -->
+    <div id="modal-error-review" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[210] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-md max-h-[90dvh] overflow-y-auto p-6 relative transform scale-95 opacity-0 transition-all duration-300 shadow-[0_0_40px_rgba(59,130,246,0.15)] border-blue-500/20">
+            <div class="text-center mb-6 mt-2">
+                <div class="w-12 h-12 rounded-full bg-blue-500/20 mx-auto flex items-center justify-center shadow-lg mb-3 border border-blue-500/30">
+                    <i data-lucide="book-open" class="w-6 h-6 text-blue-400"></i>
+                </div>
+                <h2 class="text-xl font-black text-white">مراجعة الخطأ</h2>
+                <p class="text-xs text-white/60 mt-2 leading-relaxed">حدد نوع الخطأ واكتب الدرس المستفاد لتتمكن من إتقانه لاحقاً.</p>
+            </div>
+            
+            <form id="form-error-review" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-white/50 mb-2 px-1">نوع الخطأ</label>
+                    <select id="error-type-input" required class="w-full bg-black/40 rounded-xl border border-white/10 text-white px-4 text-base min-h-[44px] focus:outline-none focus:border-blue-500/50 transition-all font-medium appearance-none">
+                        <option value="conceptual">خطأ مفاهيمي</option>
+                        <option value="calculation">خطأ حسابي</option>
+                        <option value="careless">قلة تركيز</option>
+                        <option value="other">أخرى</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-white/50 mb-2 px-1">الدرس المستفاد / التصحيح</label>
+                    <textarea id="error-lesson-input" required placeholder="ما هو التصحيح؟ وكيف تتجنب هذا الخطأ مستقبلاً؟" class="w-full bg-black/40 rounded-xl border border-white/10 text-white px-4 py-3 text-base min-h-[100px] focus:outline-none focus:border-blue-500/50 transition-all placeholder-white/20 font-medium"></textarea>
+                </div>
+
+                <div class="flex gap-3 w-full pt-2">
+                    <button type="button" id="btn-close-error-review" class="w-1/3 py-3 min-h-[44px] rounded-xl bg-white/5 border border-white/10 text-white/70 font-bold text-sm btn-press transition-all hover:bg-white/10 hover:text-white flex items-center justify-center">
+                        إلغاء
+                    </button>
+                    <button type="submit" class="w-2/3 py-3 min-h-[44px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm btn-press transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2">
+                        حفظ المراجعة <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Avatar Studio -->
+    <div id="modal-avatar-studio" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[300] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="glass-panel rounded-[2rem] w-full max-w-[92vw] md:max-w-md max-h-[90dvh] overflow-y-auto p-6 relative transform scale-95 opacity-0 transition-all duration-300 shadow-2xl flex flex-col items-center text-center" id="modal-avatar-studio-content">
+            <button id="btn-close-avatar-studio" aria-label="إغلاق النافذة" class="absolute top-4 left-4 p-2 w-11 h-11 flex items-center justify-center text-white/40 hover:text-white transition-colors bg-white/5 rounded-full z-10">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <div id="studio-avatar-rarity" class="absolute top-6 right-6 px-3 py-1 rounded-full text-[10px] font-black border z-10"></div>
+
+            <div class="relative w-48 h-48 sm:w-56 sm:h-56 mt-8 mb-6 rounded-3xl flex items-center justify-center shrink-0" id="studio-avatar-preview-container">
+                <div class="absolute inset-0 rounded-3xl opacity-20 blur-xl" id="studio-avatar-glow"></div>
+                <div class="w-full h-full relative z-10" id="studio-avatar-svg"></div>
+            </div>
+
+            <h2 id="studio-avatar-title" class="text-2xl font-black text-white mb-2"></h2>
+            <p id="studio-avatar-desc" class="text-sm text-white/60 mb-6 leading-relaxed px-2"></p>
+
+            <div id="studio-avatar-collection" class="hidden items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl mb-6">
+                <i data-lucide="layers" class="w-4 h-4 text-white/50"></i>
+                <span class="text-xs font-bold text-white/70" id="studio-avatar-collection-name"></span>
+            </div>
+
+            <div class="w-full mt-auto pt-2" id="studio-avatar-action-container">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Chest Reveal Bottom Sheet Modal -->
+    <div id="chest-reveal-modal" class="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="glass-panel w-full sm:max-w-md rounded-t-[2.5rem] sm:rounded-[2rem] p-6 border border-yellow-500/30 bg-[#0A0A0C] shadow-2xl animate-in fade-in slide-in-from-bottom duration-300" role="dialog" aria-modal="true" aria-live="assertive">
+            <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="text-center">
+                <div id="chest-reveal-icon" class="w-20 h-20 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center text-yellow-400 mx-auto mb-4 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+                    <i data-lucide="gift" class="w-10 h-10"></i>
+                </div>
+                <h3 id="chest-reveal-title" class="text-xl font-black text-white mb-2">مكافأة الصندوق</h3>
+                <p id="chest-reveal-desc" class="text-sm text-white/70 mb-6 leading-relaxed">تهانينا! لقد فتحت الصندوق وحصلت على مكافأة رائعة.</p>
+                
+                <div id="chest-reveal-reward-box" class="p-4 rounded-2xl bg-white/5 border border-white/10 mb-6 text-center">
+                    <span id="chest-reveal-reward-text" class="text-base font-black text-yellow-400"></span>
+                </div>
+
+                <button onclick="closeChestRevealModal()" class="w-full py-3.5 min-h-[56px] rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-base btn-press shadow-lg flex items-center justify-center gap-2">
+                    استلام المكافأة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zen Mode Overlay -->
+    <div id="zen-overlay" class="fixed inset-0 bg-[#020202] z-[200] hidden flex-col justify-center items-center transition-all duration-700 opacity-0 pointer-events-none w-full h-full">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#050515]/20 to-[#030308]"></div>
+        <div class="absolute inset-0 zen-breathing-bg bg-blue-500/10 pointer-events-none blur-[140px] rounded-full scale-100 mix-blend-screen"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vmin] h-[80vmin] bg-blue-600/5 rounded-full blur-[100px] animate-pulse pointer-events-none" style="animation-duration: 8s;"></div>
+        
+        <div class="text-center relative z-10 w-full px-6 flex flex-col items-center max-w-lg mx-auto">
+            <span class="inline-flex items-center gap-2 text-blue-400/50 font-medium text-[10px] sm:text-xs tracking-[0.2em] uppercase mb-12 bg-white/[0.02] border border-white/5 px-4 py-2 rounded-full backdrop-blur-md">
+                <i data-lucide="headphones" class="w-4 h-4"></i> عزلة عميقة
+            </span>
+            <div class="relative flex items-center justify-center w-72 h-72 sm:w-96 sm:h-96 mb-16">
+                <svg class="absolute inset-0 w-full h-full drop-shadow-[0_0_60px_rgba(59,130,246,0.15)] animate-[spin_10s_linear_infinite]" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(59,130,246,0.2)" stroke-width="2" stroke-dasharray="100 180" stroke-linecap="round"></circle>
+                </svg>
+                <div class="absolute text-center flex flex-col items-center justify-center">
+                    <span id="timer-display-zen" class="text-7xl sm:text-8xl font-black tracking-tighter text-white tabular-nums" style="text-shadow: 0 0 40px rgba(59,130,246,0.5);">00:00</span>
+                    <p id="timer-mode-zen" class="text-white/40 text-xs sm:text-sm mt-3 font-medium tracking-wide">تسجيل الوقت...</p>
+                </div>
+            </div>
+            <button onclick="toggleZenMode()" class="group px-8 py-4 min-h-[44px] bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded-2xl text-xs sm:text-sm font-bold transition-all hover:text-white hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl backdrop-blur-xl">
+                <i data-lucide="log-out" class="w-5 h-5 group-hover:-translate-x-1 transition-transform"></i> الخروج من العزلة
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-4 left-0 right-0 mx-auto w-full max-w-screen-xl glass-panel rounded-2xl p-1 flex justify-between items-center z-50 shadow-[0_10px_40px_rgba(0,0,0,0.7)] border-white/10 overflow-x-auto hide-scrollbar gap-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))]">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-blue-400 bg-blue-500/10 shadow-inner">
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">المهام</span>
+        </button>
+        <button onclick="switchTab('goals')" id="nav-goals" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="target" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">الأهداف</span>
+        </button>
+        <button onclick="switchTab('focus')" id="nav-focus" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="timer" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">التركيز</span>
+        </button>
+        <button onclick="switchTab('store')" id="nav-store" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">المتجر</span>
+        </button>
+        <button onclick="switchTab('stats')" id="nav-stats" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">إحصائيات</span>
+        </button>
+        <button onclick="switchTab('schedule')" id="nav-schedule" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">الجدول</span>
+        </button>
+        <button onclick="switchTab('exams')" id="nav-exams" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">الامتحانات</span>
+        </button>
+        <button onclick="switchTab('weaknesses')" id="nav-weaknesses" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">نقاط الضعف</span>
+        </button>
+        <button onclick="switchTab('profile')" id="nav-profile" class="flex-1 min-w-[50px] min-h-[44px] py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-white/50 hover:text-white">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[8px] font-bold">البروفايل</span>
+        </button>
+    </nav>
+</body>
+</html>
